@@ -134,6 +134,11 @@ async function acceptOfferIfAny(orderId) {
 async function checkOfferSpvHtlc(offerData, offerId) {
     console.log("Checking spv htlc of offer " + offerId);
 
+    if (mapOfferSpvClaim.has(offerId)) {
+        console.log("Offer id: " + offerId + " already claimed in btc tx " + mapOfferSpvClaim.get(offerId));
+        return;
+    }
+
     if (objOfferSpvHtlc.hasOwnProperty(offerId)) {
         console.log("Offer " + offerId + " already has spv htlc " + objOfferSpvHtlc[offerId]);
         return;
@@ -243,7 +248,7 @@ async function loadExistingData() {
                 await checkHtlcOutputAndClaim(offerId);
             }
 
-            await sleep(10000);
+            await sleep(20000);
         }
     }catch(e) {
         console.error(e);

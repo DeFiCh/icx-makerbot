@@ -1,0 +1,346 @@
+deno run --allow-net --allow-write --allow-read icx_bot_dbtc_maker.js 127.0.0.1 18554 test test 7Jw72Q9yGJ1UWCXdQcUwkwSX48mkvdV2sS tb1qfdl5fs580x8ykqjngfvgdwhryu62r59q3tuaga
+Skipped to load hashseed.json
+Skipped to load offerspvhtlc.json
+√ Completed: spv_getaddresspubkey
+Btc pubkey: 03668b5dc4f33dab92cd5b70c034a88e0d2510b14e39f3995245acb4d8723c2b35
+√ Completed: icx_listorders
+√ Completed: getaccount
+Account balance 10861.42320066@DFI,10099.99970075@BTC,10100.00000000@ETH,10100.00000000@USDT,1.76692021@MOCK,10.21070861@MOCK-DFI
+BTC balance 10099.99970075
+Creating order with size 0.1
+√ Completed: icx_createorder
+√ Tx id: 5e3986d18662db1600eaa682543ff17ce7496943d58cd577984f56df6983bc70 confirmed
+created order 5e3986d18662db1600eaa682543ff17ce7496943d58cd577984f56df6983bc70
+√ Completed: icx_listorders
+√ Completed: icx_listorders
+5e3986d18662db1600eaa682543ff17ce7496943d58cd577984f56df6983bc70 -> [object Object]
+Found order 5e3986d18662db1600eaa682543ff17ce7496943d58cd577984f56df6983bc70
+√ Completed: icx_listorders
+√ Completed: icx_listorders
+5e3986d18662db1600eaa682543ff17ce7496943d58cd577984f56df6983bc70 -> [object Object]
+Found order 5e3986d18662db1600eaa682543ff17ce7496943d58cd577984f56df6983bc70
+√ Completed: icx_listorders
+√ Completed: icx_listorders
+5e3986d18662db1600eaa682543ff17ce7496943d58cd577984f56df6983bc70 -> [object Object]
+Found order 5e3986d18662db1600eaa682543ff17ce7496943d58cd577984f56df6983bc70
+√ Completed: icx_listorders
+√ Completed: icx_listorders
+5e3986d18662db1600eaa682543ff17ce7496943d58cd577984f56df6983bc70 -> [object Object]
+Found order 5e3986d18662db1600eaa682543ff17ce7496943d58cd577984f56df6983bc70
+√ Completed: icx_listorders
+Found order 5e3986d18662db1600eaa682543ff17ce7496943d58cd577984f56df6983bc70
+√ Completed: icx_listorders
+checkExistingDfcHtlc for offerId: 96ff828f54e870e5e8e8040e2b78804765ead4f932fe32a2189206c5eb368449
+√ Completed: icx_listhtlcs
+checkExistingDfcHtlc icx_listhtlcs result: {"WARNING":"ICX and Atomic Swap are experimental features. You might end up losing your funds. USE IT AT YOUR OWN RISK."}
+96ff828f54e870e5e8e8040e2b78804765ead4f932fe32a2189206c5eb368449 -> [object Object]
+Order detail: {"orderTx":"5e3986d18662db1600eaa682543ff17ce7496943d58cd577984f56df6983bc70","status":"OPEN","amount":0.0001,"amountInFromAsset":0.0001,"ownerAddress":"tk7nuNxJ96tCAM57eT7Wx6pQYut8yReoZt","takerFee":5e-7,"expireHeight":413024}
+Seed/Hash generated: 5026297f7c0455b55c49042d1c319fe046edc4141b50e5e1e06289d97f73a84e/5102a292d7efa74fcc780439bb02c87bb71328a15882197b7ab4d7400cab2123
+√ Completed: icx_submitdfchtlc
+√ Tx id: da94df627e829e59372287cf89dd98bc9afbd5326d72af22db2d453f91e13a0d confirmed
+Checking spv htlc of offer 96ff828f54e870e5e8e8040e2b78804765ead4f932fe32a2189206c5eb368449
+√ Completed: icx_listhtlcs
+icx_listhtlcs result: {"WARNING":"ICX and Atomic Swap are experimental features. You might end up losing your funds. USE IT AT YOUR OWN RISK.","da94df627e829e59372287cf89dd98bc9afbd5326d72af22db2d453f91e13a0d":{"type":"DFC","status":"OPEN","offerTx":"96ff828f54e870e5e8e8040e2b78804765ead4f932fe32a2189206c5eb368449","amount":0.0001,"amountInEXTAsset":0.0001,"hash":"5102a292d7efa74fcc780439bb02c87bb71328a15882197b7ab4d7400cab2123","timeout":500,"height":412729,"refundHeight":413229}}
+√ Completed: icx_listhtlcs
+icx_listhtlcs result: {"WARNING":"ICX and Atomic Swap are experimental features. You might end up losing your funds. USE IT AT YOUR OWN RISK.","da94df627e829e59372287cf89dd98bc9afbd5326d72af22db2d453f91e13a0d":{"type":"DFC","status":"OPEN","offerTx":"96ff828f54e870e5e8e8040e2b78804765ead4f932fe32a2189206c5eb368449","amount":0.0001,"amountInEXTAsset":0.0001,"hash":"5102a292d7efa74fcc780439bb02c87bb71328a15882197b7ab4d7400cab2123","timeout":500,"height":412729,"refundHeight":413229}}
+√ Completed: icx_listorders
+5e3986d18662db1600eaa682543ff17ce7496943d58cd577984f56df6983bc70 -> [object Object]
+Found order 5e3986d18662db1600eaa682543ff17ce7496943d58cd577984f56df6983bc70
+√ Completed: icx_listorders
+checkExistingDfcHtlc for offerId: 96ff828f54e870e5e8e8040e2b78804765ead4f932fe32a2189206c5eb368449
+Offer 96ff828f54e870e5e8e8040e2b78804765ead4f932fe32a2189206c5eb368449 already has dfc htlc da94df627e829e59372287cf89dd98bc9afbd5326d72af22db2d453f91e13a0d
+Order 5e3986d18662db1600eaa682543ff17ce7496943d58cd577984f56df6983bc70 already has offer 96ff828f54e870e5e8e8040e2b78804765ead4f932fe32a2189206c5eb368449
+Checking spv htlc of offer 96ff828f54e870e5e8e8040e2b78804765ead4f932fe32a2189206c5eb368449
+√ Completed: icx_listhtlcs
+icx_listhtlcs result: {"WARNING":"ICX and Atomic Swap are experimental features. You might end up losing your funds. USE IT AT YOUR OWN RISK.","da94df627e829e59372287cf89dd98bc9afbd5326d72af22db2d453f91e13a0d":{"type":"DFC","status":"OPEN","offerTx":"96ff828f54e870e5e8e8040e2b78804765ead4f932fe32a2189206c5eb368449","amount":0.0001,"amountInEXTAsset":0.0001,"hash":"5102a292d7efa74fcc780439bb02c87bb71328a15882197b7ab4d7400cab2123","timeout":500,"height":412729,"refundHeight":413229}}
+√ Completed: icx_listorders
+5e3986d18662db1600eaa682543ff17ce7496943d58cd577984f56df6983bc70 -> [object Object]
+Found order 5e3986d18662db1600eaa682543ff17ce7496943d58cd577984f56df6983bc70
+√ Completed: icx_listorders
+checkExistingDfcHtlc for offerId: 96ff828f54e870e5e8e8040e2b78804765ead4f932fe32a2189206c5eb368449
+Offer 96ff828f54e870e5e8e8040e2b78804765ead4f932fe32a2189206c5eb368449 already has dfc htlc da94df627e829e59372287cf89dd98bc9afbd5326d72af22db2d453f91e13a0d
+Order 5e3986d18662db1600eaa682543ff17ce7496943d58cd577984f56df6983bc70 already has offer 96ff828f54e870e5e8e8040e2b78804765ead4f932fe32a2189206c5eb368449
+Checking spv htlc of offer 96ff828f54e870e5e8e8040e2b78804765ead4f932fe32a2189206c5eb368449
+√ Completed: icx_listhtlcs
+icx_listhtlcs result: {"WARNING":"ICX and Atomic Swap are experimental features. You might end up losing your funds. USE IT AT YOUR OWN RISK.","da94df627e829e59372287cf89dd98bc9afbd5326d72af22db2d453f91e13a0d":{"type":"DFC","status":"OPEN","offerTx":"96ff828f54e870e5e8e8040e2b78804765ead4f932fe32a2189206c5eb368449","amount":0.0001,"amountInEXTAsset":0.0001,"hash":"5102a292d7efa74fcc780439bb02c87bb71328a15882197b7ab4d7400cab2123","timeout":500,"height":412729,"refundHeight":413229}}
+√ Completed: icx_listorders
+5e3986d18662db1600eaa682543ff17ce7496943d58cd577984f56df6983bc70 -> [object Object]
+Found order 5e3986d18662db1600eaa682543ff17ce7496943d58cd577984f56df6983bc70
+√ Completed: icx_listorders
+checkExistingDfcHtlc for offerId: 96ff828f54e870e5e8e8040e2b78804765ead4f932fe32a2189206c5eb368449
+Offer 96ff828f54e870e5e8e8040e2b78804765ead4f932fe32a2189206c5eb368449 already has dfc htlc da94df627e829e59372287cf89dd98bc9afbd5326d72af22db2d453f91e13a0d
+Order 5e3986d18662db1600eaa682543ff17ce7496943d58cd577984f56df6983bc70 already has offer 96ff828f54e870e5e8e8040e2b78804765ead4f932fe32a2189206c5eb368449
+Checking spv htlc of offer 96ff828f54e870e5e8e8040e2b78804765ead4f932fe32a2189206c5eb368449
+√ Completed: icx_listhtlcs
+icx_listhtlcs result: {"WARNING":"ICX and Atomic Swap are experimental features. You might end up losing your funds. USE IT AT YOUR OWN RISK.","da94df627e829e59372287cf89dd98bc9afbd5326d72af22db2d453f91e13a0d":{"type":"DFC","status":"OPEN","offerTx":"96ff828f54e870e5e8e8040e2b78804765ead4f932fe32a2189206c5eb368449","amount":0.0001,"amountInEXTAsset":0.0001,"hash":"5102a292d7efa74fcc780439bb02c87bb71328a15882197b7ab4d7400cab2123","timeout":500,"height":412729,"refundHeight":413229}}
+√ Completed: icx_listorders
+5e3986d18662db1600eaa682543ff17ce7496943d58cd577984f56df6983bc70 -> [object Object]
+Found order 5e3986d18662db1600eaa682543ff17ce7496943d58cd577984f56df6983bc70
+√ Completed: icx_listorders
+checkExistingDfcHtlc for offerId: 96ff828f54e870e5e8e8040e2b78804765ead4f932fe32a2189206c5eb368449
+Offer 96ff828f54e870e5e8e8040e2b78804765ead4f932fe32a2189206c5eb368449 already has dfc htlc da94df627e829e59372287cf89dd98bc9afbd5326d72af22db2d453f91e13a0d
+Order 5e3986d18662db1600eaa682543ff17ce7496943d58cd577984f56df6983bc70 already has offer 96ff828f54e870e5e8e8040e2b78804765ead4f932fe32a2189206c5eb368449
+Checking spv htlc of offer 96ff828f54e870e5e8e8040e2b78804765ead4f932fe32a2189206c5eb368449
+√ Completed: icx_listhtlcs
+icx_listhtlcs result: {"WARNING":"ICX and Atomic Swap are experimental features. You might end up losing your funds. USE IT AT YOUR OWN RISK.","da94df627e829e59372287cf89dd98bc9afbd5326d72af22db2d453f91e13a0d":{"type":"DFC","status":"OPEN","offerTx":"96ff828f54e870e5e8e8040e2b78804765ead4f932fe32a2189206c5eb368449","amount":0.0001,"amountInEXTAsset":0.0001,"hash":"5102a292d7efa74fcc780439bb02c87bb71328a15882197b7ab4d7400cab2123","timeout":500,"height":412729,"refundHeight":413229}}
+√ Completed: icx_listorders
+5e3986d18662db1600eaa682543ff17ce7496943d58cd577984f56df6983bc70 -> [object Object]
+Found order 5e3986d18662db1600eaa682543ff17ce7496943d58cd577984f56df6983bc70
+√ Completed: icx_listorders
+checkExistingDfcHtlc for offerId: 96ff828f54e870e5e8e8040e2b78804765ead4f932fe32a2189206c5eb368449
+Offer 96ff828f54e870e5e8e8040e2b78804765ead4f932fe32a2189206c5eb368449 already has dfc htlc da94df627e829e59372287cf89dd98bc9afbd5326d72af22db2d453f91e13a0d
+Order 5e3986d18662db1600eaa682543ff17ce7496943d58cd577984f56df6983bc70 already has offer 96ff828f54e870e5e8e8040e2b78804765ead4f932fe32a2189206c5eb368449
+Checking spv htlc of offer 96ff828f54e870e5e8e8040e2b78804765ead4f932fe32a2189206c5eb368449
+√ Completed: icx_listhtlcs
+icx_listhtlcs result: {"WARNING":"ICX and Atomic Swap are experimental features. You might end up losing your funds. USE IT AT YOUR OWN RISK.","da94df627e829e59372287cf89dd98bc9afbd5326d72af22db2d453f91e13a0d":{"type":"DFC","status":"OPEN","offerTx":"96ff828f54e870e5e8e8040e2b78804765ead4f932fe32a2189206c5eb368449","amount":0.0001,"amountInEXTAsset":0.0001,"hash":"5102a292d7efa74fcc780439bb02c87bb71328a15882197b7ab4d7400cab2123","timeout":500,"height":412729,"refundHeight":413229}}
+√ Completed: icx_listorders
+5e3986d18662db1600eaa682543ff17ce7496943d58cd577984f56df6983bc70 -> [object Object]
+Found order 5e3986d18662db1600eaa682543ff17ce7496943d58cd577984f56df6983bc70
+√ Completed: icx_listorders
+checkExistingDfcHtlc for offerId: 96ff828f54e870e5e8e8040e2b78804765ead4f932fe32a2189206c5eb368449
+Offer 96ff828f54e870e5e8e8040e2b78804765ead4f932fe32a2189206c5eb368449 already has dfc htlc da94df627e829e59372287cf89dd98bc9afbd5326d72af22db2d453f91e13a0d
+Order 5e3986d18662db1600eaa682543ff17ce7496943d58cd577984f56df6983bc70 already has offer 96ff828f54e870e5e8e8040e2b78804765ead4f932fe32a2189206c5eb368449
+Checking spv htlc of offer 96ff828f54e870e5e8e8040e2b78804765ead4f932fe32a2189206c5eb368449
+√ Completed: icx_listhtlcs
+icx_listhtlcs result: {"WARNING":"ICX and Atomic Swap are experimental features. You might end up losing your funds. USE IT AT YOUR OWN RISK.","da94df627e829e59372287cf89dd98bc9afbd5326d72af22db2d453f91e13a0d":{"type":"DFC","status":"OPEN","offerTx":"96ff828f54e870e5e8e8040e2b78804765ead4f932fe32a2189206c5eb368449","amount":0.0001,"amountInEXTAsset":0.0001,"hash":"5102a292d7efa74fcc780439bb02c87bb71328a15882197b7ab4d7400cab2123","timeout":500,"height":412729,"refundHeight":413229}}
+√ Completed: icx_listorders
+5e3986d18662db1600eaa682543ff17ce7496943d58cd577984f56df6983bc70 -> [object Object]
+Found order 5e3986d18662db1600eaa682543ff17ce7496943d58cd577984f56df6983bc70
+√ Completed: icx_listorders
+checkExistingDfcHtlc for offerId: 96ff828f54e870e5e8e8040e2b78804765ead4f932fe32a2189206c5eb368449
+Offer 96ff828f54e870e5e8e8040e2b78804765ead4f932fe32a2189206c5eb368449 already has dfc htlc da94df627e829e59372287cf89dd98bc9afbd5326d72af22db2d453f91e13a0d
+Order 5e3986d18662db1600eaa682543ff17ce7496943d58cd577984f56df6983bc70 already has offer 96ff828f54e870e5e8e8040e2b78804765ead4f932fe32a2189206c5eb368449
+Checking spv htlc of offer 96ff828f54e870e5e8e8040e2b78804765ead4f932fe32a2189206c5eb368449
+√ Completed: icx_listhtlcs
+icx_listhtlcs result: {"WARNING":"ICX and Atomic Swap are experimental features. You might end up losing your funds. USE IT AT YOUR OWN RISK.","da94df627e829e59372287cf89dd98bc9afbd5326d72af22db2d453f91e13a0d":{"type":"DFC","status":"OPEN","offerTx":"96ff828f54e870e5e8e8040e2b78804765ead4f932fe32a2189206c5eb368449","amount":0.0001,"amountInEXTAsset":0.0001,"hash":"5102a292d7efa74fcc780439bb02c87bb71328a15882197b7ab4d7400cab2123","timeout":500,"height":412729,"refundHeight":413229}}
+√ Completed: icx_listorders
+5e3986d18662db1600eaa682543ff17ce7496943d58cd577984f56df6983bc70 -> [object Object]
+Found order 5e3986d18662db1600eaa682543ff17ce7496943d58cd577984f56df6983bc70
+√ Completed: icx_listorders
+checkExistingDfcHtlc for offerId: 96ff828f54e870e5e8e8040e2b78804765ead4f932fe32a2189206c5eb368449
+Offer 96ff828f54e870e5e8e8040e2b78804765ead4f932fe32a2189206c5eb368449 already has dfc htlc da94df627e829e59372287cf89dd98bc9afbd5326d72af22db2d453f91e13a0d
+Order 5e3986d18662db1600eaa682543ff17ce7496943d58cd577984f56df6983bc70 already has offer 96ff828f54e870e5e8e8040e2b78804765ead4f932fe32a2189206c5eb368449
+Checking spv htlc of offer 96ff828f54e870e5e8e8040e2b78804765ead4f932fe32a2189206c5eb368449
+√ Completed: icx_listhtlcs
+icx_listhtlcs result: {"WARNING":"ICX and Atomic Swap are experimental features. You might end up losing your funds. USE IT AT YOUR OWN RISK.","da94df627e829e59372287cf89dd98bc9afbd5326d72af22db2d453f91e13a0d":{"type":"DFC","status":"OPEN","offerTx":"96ff828f54e870e5e8e8040e2b78804765ead4f932fe32a2189206c5eb368449","amount":0.0001,"amountInEXTAsset":0.0001,"hash":"5102a292d7efa74fcc780439bb02c87bb71328a15882197b7ab4d7400cab2123","timeout":500,"height":412729,"refundHeight":413229}}
+√ Completed: icx_listorders
+5e3986d18662db1600eaa682543ff17ce7496943d58cd577984f56df6983bc70 -> [object Object]
+Found order 5e3986d18662db1600eaa682543ff17ce7496943d58cd577984f56df6983bc70
+√ Completed: icx_listorders
+checkExistingDfcHtlc for offerId: 96ff828f54e870e5e8e8040e2b78804765ead4f932fe32a2189206c5eb368449
+Offer 96ff828f54e870e5e8e8040e2b78804765ead4f932fe32a2189206c5eb368449 already has dfc htlc da94df627e829e59372287cf89dd98bc9afbd5326d72af22db2d453f91e13a0d
+Order 5e3986d18662db1600eaa682543ff17ce7496943d58cd577984f56df6983bc70 already has offer 96ff828f54e870e5e8e8040e2b78804765ead4f932fe32a2189206c5eb368449
+Checking spv htlc of offer 96ff828f54e870e5e8e8040e2b78804765ead4f932fe32a2189206c5eb368449
+√ Completed: icx_listhtlcs
+icx_listhtlcs result: {"WARNING":"ICX and Atomic Swap are experimental features. You might end up losing your funds. USE IT AT YOUR OWN RISK.","da94df627e829e59372287cf89dd98bc9afbd5326d72af22db2d453f91e13a0d":{"type":"DFC","status":"OPEN","offerTx":"96ff828f54e870e5e8e8040e2b78804765ead4f932fe32a2189206c5eb368449","amount":0.0001,"amountInEXTAsset":0.0001,"hash":"5102a292d7efa74fcc780439bb02c87bb71328a15882197b7ab4d7400cab2123","timeout":500,"height":412729,"refundHeight":413229}}
+√ Completed: icx_listorders
+5e3986d18662db1600eaa682543ff17ce7496943d58cd577984f56df6983bc70 -> [object Object]
+Found order 5e3986d18662db1600eaa682543ff17ce7496943d58cd577984f56df6983bc70
+√ Completed: icx_listorders
+checkExistingDfcHtlc for offerId: 96ff828f54e870e5e8e8040e2b78804765ead4f932fe32a2189206c5eb368449
+Offer 96ff828f54e870e5e8e8040e2b78804765ead4f932fe32a2189206c5eb368449 already has dfc htlc da94df627e829e59372287cf89dd98bc9afbd5326d72af22db2d453f91e13a0d
+Order 5e3986d18662db1600eaa682543ff17ce7496943d58cd577984f56df6983bc70 already has offer 96ff828f54e870e5e8e8040e2b78804765ead4f932fe32a2189206c5eb368449
+Checking spv htlc of offer 96ff828f54e870e5e8e8040e2b78804765ead4f932fe32a2189206c5eb368449
+√ Completed: icx_listhtlcs
+icx_listhtlcs result: {"WARNING":"ICX and Atomic Swap are experimental features. You might end up losing your funds. USE IT AT YOUR OWN RISK.","da94df627e829e59372287cf89dd98bc9afbd5326d72af22db2d453f91e13a0d":{"type":"DFC","status":"OPEN","offerTx":"96ff828f54e870e5e8e8040e2b78804765ead4f932fe32a2189206c5eb368449","amount":0.0001,"amountInEXTAsset":0.0001,"hash":"5102a292d7efa74fcc780439bb02c87bb71328a15882197b7ab4d7400cab2123","timeout":500,"height":412729,"refundHeight":413229}}
+√ Completed: icx_listorders
+5e3986d18662db1600eaa682543ff17ce7496943d58cd577984f56df6983bc70 -> [object Object]
+Found order 5e3986d18662db1600eaa682543ff17ce7496943d58cd577984f56df6983bc70
+√ Completed: icx_listorders
+checkExistingDfcHtlc for offerId: 96ff828f54e870e5e8e8040e2b78804765ead4f932fe32a2189206c5eb368449
+Offer 96ff828f54e870e5e8e8040e2b78804765ead4f932fe32a2189206c5eb368449 already has dfc htlc da94df627e829e59372287cf89dd98bc9afbd5326d72af22db2d453f91e13a0d
+Order 5e3986d18662db1600eaa682543ff17ce7496943d58cd577984f56df6983bc70 already has offer 96ff828f54e870e5e8e8040e2b78804765ead4f932fe32a2189206c5eb368449
+Checking spv htlc of offer 96ff828f54e870e5e8e8040e2b78804765ead4f932fe32a2189206c5eb368449
+√ Completed: icx_listhtlcs
+icx_listhtlcs result: {"WARNING":"ICX and Atomic Swap are experimental features. You might end up losing your funds. USE IT AT YOUR OWN RISK.","da94df627e829e59372287cf89dd98bc9afbd5326d72af22db2d453f91e13a0d":{"type":"DFC","status":"OPEN","offerTx":"96ff828f54e870e5e8e8040e2b78804765ead4f932fe32a2189206c5eb368449","amount":0.0001,"amountInEXTAsset":0.0001,"hash":"5102a292d7efa74fcc780439bb02c87bb71328a15882197b7ab4d7400cab2123","timeout":500,"height":412729,"refundHeight":413229}}
+√ Completed: icx_listorders
+5e3986d18662db1600eaa682543ff17ce7496943d58cd577984f56df6983bc70 -> [object Object]
+Found order 5e3986d18662db1600eaa682543ff17ce7496943d58cd577984f56df6983bc70
+√ Completed: icx_listorders
+checkExistingDfcHtlc for offerId: 96ff828f54e870e5e8e8040e2b78804765ead4f932fe32a2189206c5eb368449
+Offer 96ff828f54e870e5e8e8040e2b78804765ead4f932fe32a2189206c5eb368449 already has dfc htlc da94df627e829e59372287cf89dd98bc9afbd5326d72af22db2d453f91e13a0d
+Order 5e3986d18662db1600eaa682543ff17ce7496943d58cd577984f56df6983bc70 already has offer 96ff828f54e870e5e8e8040e2b78804765ead4f932fe32a2189206c5eb368449
+Checking spv htlc of offer 96ff828f54e870e5e8e8040e2b78804765ead4f932fe32a2189206c5eb368449
+√ Completed: icx_listhtlcs
+icx_listhtlcs result: {"WARNING":"ICX and Atomic Swap are experimental features. You might end up losing your funds. USE IT AT YOUR OWN RISK.","da94df627e829e59372287cf89dd98bc9afbd5326d72af22db2d453f91e13a0d":{"type":"DFC","status":"OPEN","offerTx":"96ff828f54e870e5e8e8040e2b78804765ead4f932fe32a2189206c5eb368449","amount":0.0001,"amountInEXTAsset":0.0001,"hash":"5102a292d7efa74fcc780439bb02c87bb71328a15882197b7ab4d7400cab2123","timeout":500,"height":412729,"refundHeight":413229},"a8a46de2999b7e6cee4c28a79688c3d04ba87dd94b20919ffadb9cb464786587":{"type":"EXTERNAL","status":"OPEN","offerTx":"96ff828f54e870e5e8e8040e2b78804765ead4f932fe32a2189206c5eb368449","amount":0.0001,"amountInDFCAsset":0.0001,"hash":"5102a292d7efa74fcc780439bb02c87bb71328a15882197b7ab4d7400cab2123","htlcScriptAddress":"2MzgDdVwmdPo8fEDuCm8qK3NHsVJhfqsLSW","ownerPubkey":"030eac7e179cf91d2dd3f275a2517e23564679a28e19e9bdd251cc8afdaf90cde1","timeout":20,"height":412744}}
+√ Completed: spv_syncstatus
+√ Completed: spv_createhtlc
+√ SPV tx submitted
+spv_createhtlc address result: 2MzgDdVwmdPo8fEDuCm8qK3NHsVJhfqsLSW
+√ Completed: icx_listorders
+5e3986d18662db1600eaa682543ff17ce7496943d58cd577984f56df6983bc70 -> [object Object]
+Found order 5e3986d18662db1600eaa682543ff17ce7496943d58cd577984f56df6983bc70
+√ Completed: icx_listorders
+checkExistingDfcHtlc for offerId: 96ff828f54e870e5e8e8040e2b78804765ead4f932fe32a2189206c5eb368449
+Offer 96ff828f54e870e5e8e8040e2b78804765ead4f932fe32a2189206c5eb368449 already has dfc htlc da94df627e829e59372287cf89dd98bc9afbd5326d72af22db2d453f91e13a0d
+Order 5e3986d18662db1600eaa682543ff17ce7496943d58cd577984f56df6983bc70 already has offer 96ff828f54e870e5e8e8040e2b78804765ead4f932fe32a2189206c5eb368449
+Checking spv htlc of offer 96ff828f54e870e5e8e8040e2b78804765ead4f932fe32a2189206c5eb368449
+Offer 96ff828f54e870e5e8e8040e2b78804765ead4f932fe32a2189206c5eb368449 already has spv htlc 2MzgDdVwmdPo8fEDuCm8qK3NHsVJhfqsLSW
+Check output of spv htlc: 2MzgDdVwmdPo8fEDuCm8qK3NHsVJhfqsLSW
+√ Completed: spv_listreceivedbyaddress
+spv_listreceivedbyaddress result []
+√ Completed: icx_listorders
+5e3986d18662db1600eaa682543ff17ce7496943d58cd577984f56df6983bc70 -> [object Object]
+Found order 5e3986d18662db1600eaa682543ff17ce7496943d58cd577984f56df6983bc70
+√ Completed: icx_listorders
+checkExistingDfcHtlc for offerId: 96ff828f54e870e5e8e8040e2b78804765ead4f932fe32a2189206c5eb368449
+Offer 96ff828f54e870e5e8e8040e2b78804765ead4f932fe32a2189206c5eb368449 already has dfc htlc da94df627e829e59372287cf89dd98bc9afbd5326d72af22db2d453f91e13a0d
+Order 5e3986d18662db1600eaa682543ff17ce7496943d58cd577984f56df6983bc70 already has offer 96ff828f54e870e5e8e8040e2b78804765ead4f932fe32a2189206c5eb368449
+Checking spv htlc of offer 96ff828f54e870e5e8e8040e2b78804765ead4f932fe32a2189206c5eb368449
+Offer 96ff828f54e870e5e8e8040e2b78804765ead4f932fe32a2189206c5eb368449 already has spv htlc 2MzgDdVwmdPo8fEDuCm8qK3NHsVJhfqsLSW
+Check output of spv htlc: 2MzgDdVwmdPo8fEDuCm8qK3NHsVJhfqsLSW
+√ Completed: spv_listreceivedbyaddress
+√ Completed: icx_listorders
+5e3986d18662db1600eaa682543ff17ce7496943d58cd577984f56df6983bc70 -> [object Object]
+Found order 5e3986d18662db1600eaa682543ff17ce7496943d58cd577984f56df6983bc70
+√ Completed: icx_listorders
+checkExistingDfcHtlc for offerId: 96ff828f54e870e5e8e8040e2b78804765ead4f932fe32a2189206c5eb368449
+Offer 96ff828f54e870e5e8e8040e2b78804765ead4f932fe32a2189206c5eb368449 already has dfc htlc da94df627e829e59372287cf89dd98bc9afbd5326d72af22db2d453f91e13a0d
+Order 5e3986d18662db1600eaa682543ff17ce7496943d58cd577984f56df6983bc70 already has offer 96ff828f54e870e5e8e8040e2b78804765ead4f932fe32a2189206c5eb368449
+Checking spv htlc of offer 96ff828f54e870e5e8e8040e2b78804765ead4f932fe32a2189206c5eb368449
+Offer 96ff828f54e870e5e8e8040e2b78804765ead4f932fe32a2189206c5eb368449 already has spv htlc 2MzgDdVwmdPo8fEDuCm8qK3NHsVJhfqsLSW
+Check output of spv htlc: 2MzgDdVwmdPo8fEDuCm8qK3NHsVJhfqsLSW
+√ Completed: spv_listreceivedbyaddress
+spv_listreceivedbyaddress result []
+√ Completed: icx_listorders
+5e3986d18662db1600eaa682543ff17ce7496943d58cd577984f56df6983bc70 -> [object Object]
+Found order 5e3986d18662db1600eaa682543ff17ce7496943d58cd577984f56df6983bc70
+√ Completed: icx_listorders
+checkExistingDfcHtlc for offerId: 96ff828f54e870e5e8e8040e2b78804765ead4f932fe32a2189206c5eb368449
+Offer 96ff828f54e870e5e8e8040e2b78804765ead4f932fe32a2189206c5eb368449 already has dfc htlc da94df627e829e59372287cf89dd98bc9afbd5326d72af22db2d453f91e13a0d
+Order 5e3986d18662db1600eaa682543ff17ce7496943d58cd577984f56df6983bc70 already has offer 96ff828f54e870e5e8e8040e2b78804765ead4f932fe32a2189206c5eb368449
+Checking spv htlc of offer 96ff828f54e870e5e8e8040e2b78804765ead4f932fe32a2189206c5eb368449
+Offer 96ff828f54e870e5e8e8040e2b78804765ead4f932fe32a2189206c5eb368449 already has spv htlc 2MzgDdVwmdPo8fEDuCm8qK3NHsVJhfqsLSW
+Check output of spv htlc: 2MzgDdVwmdPo8fEDuCm8qK3NHsVJhfqsLSW
+√ Completed: spv_listreceivedbyaddress
+spv_listreceivedbyaddress result [{"address":"2MzgDdVwmdPo8fEDuCm8qK3NHsVJhfqsLSW","type":"HTLC","amount":0.0001,"confirmations":1,"txids":["e34fe2b6a66e96718cd001d67ab1e563c660a6ad75182602f66105f26af5b7f1"]}]
+listSpvReceived.length: 1
+spv_claimhtlc input: ["2MzgDdVwmdPo8fEDuCm8qK3NHsVJhfqsLSW","tb1qfdl5fs580x8ykqjngfvgdwhryu62r59q3tuaga","5026297f7c0455b55c49042d1c319fe046edc4141b50e5e1e06289d97f73a84e"]
+√ Completed: spv_syncstatus
+√ Completed: spv_claimhtlc
+√ SPV tx submitted
+SPV claim txid: c7e7ce9a7ef4bce66eafc3c71cbf7ff344ae47e82922cf16516c6325cdf78467
+√ Completed: icx_listorders
+5e3986d18662db1600eaa682543ff17ce7496943d58cd577984f56df6983bc70 -> [object Object]
+Found order 5e3986d18662db1600eaa682543ff17ce7496943d58cd577984f56df6983bc70
+√ Completed: icx_listorders
+checkExistingDfcHtlc for offerId: 96ff828f54e870e5e8e8040e2b78804765ead4f932fe32a2189206c5eb368449
+Offer 96ff828f54e870e5e8e8040e2b78804765ead4f932fe32a2189206c5eb368449 already has dfc htlc da94df627e829e59372287cf89dd98bc9afbd5326d72af22db2d453f91e13a0d
+Order 5e3986d18662db1600eaa682543ff17ce7496943d58cd577984f56df6983bc70 already has offer 96ff828f54e870e5e8e8040e2b78804765ead4f932fe32a2189206c5eb368449
+Checking spv htlc of offer 96ff828f54e870e5e8e8040e2b78804765ead4f932fe32a2189206c5eb368449
+√ Completed: icx_listhtlcs
+icx_listhtlcs result: {"WARNING":"ICX and Atomic Swap are experimental features. You might end up losing your funds. USE IT AT YOUR OWN RISK.","da94df627e829e59372287cf89dd98bc9afbd5326d72af22db2d453f91e13a0d":{"type":"DFC","status":"OPEN","offerTx":"96ff828f54e870e5e8e8040e2b78804765ead4f932fe32a2189206c5eb368449","amount":0.0001,"amountInEXTAsset":0.0001,"hash":"5102a292d7efa74fcc780439bb02c87bb71328a15882197b7ab4d7400cab2123","timeout":500,"height":412729,"refundHeight":413229},"a8a46de2999b7e6cee4c28a79688c3d04ba87dd94b20919ffadb9cb464786587":{"type":"EXTERNAL","status":"OPEN","offerTx":"96ff828f54e870e5e8e8040e2b78804765ead4f932fe32a2189206c5eb368449","amount":0.0001,"amountInDFCAsset":0.0001,"hash":"5102a292d7efa74fcc780439bb02c87bb71328a15882197b7ab4d7400cab2123","htlcScriptAddress":"2MzgDdVwmdPo8fEDuCm8qK3NHsVJhfqsLSW","ownerPubkey":"030eac7e179cf91d2dd3f275a2517e23564679a28e19e9bdd251cc8afdaf90cde1","timeout":20,"height":412744}}
+√ Completed: spv_syncstatus
+√ Completed: spv_createhtlc
+√ SPV tx submitted
+spv_createhtlc address result: 2MzgDdVwmdPo8fEDuCm8qK3NHsVJhfqsLSW
+√ Completed: icx_listorders
+5e3986d18662db1600eaa682543ff17ce7496943d58cd577984f56df6983bc70 -> [object Object]
+Found order 5e3986d18662db1600eaa682543ff17ce7496943d58cd577984f56df6983bc70
+√ Completed: icx_listorders
+checkExistingDfcHtlc for offerId: 96ff828f54e870e5e8e8040e2b78804765ead4f932fe32a2189206c5eb368449
+Offer 96ff828f54e870e5e8e8040e2b78804765ead4f932fe32a2189206c5eb368449 already has dfc htlc da94df627e829e59372287cf89dd98bc9afbd5326d72af22db2d453f91e13a0d
+Order 5e3986d18662db1600eaa682543ff17ce7496943d58cd577984f56df6983bc70 already has offer 96ff828f54e870e5e8e8040e2b78804765ead4f932fe32a2189206c5eb368449
+Checking spv htlc of offer 96ff828f54e870e5e8e8040e2b78804765ead4f932fe32a2189206c5eb368449
+Offer 96ff828f54e870e5e8e8040e2b78804765ead4f932fe32a2189206c5eb368449 already has spv htlc 2MzgDdVwmdPo8fEDuCm8qK3NHsVJhfqsLSW
+Offer id: 96ff828f54e870e5e8e8040e2b78804765ead4f932fe32a2189206c5eb368449 already claimed in btc tx [object Object]
+√ Completed: icx_listorders
+5e3986d18662db1600eaa682543ff17ce7496943d58cd577984f56df6983bc70 -> [object Object]
+Found order 5e3986d18662db1600eaa682543ff17ce7496943d58cd577984f56df6983bc70
+√ Completed: icx_listorders
+checkExistingDfcHtlc for offerId: 96ff828f54e870e5e8e8040e2b78804765ead4f932fe32a2189206c5eb368449
+Offer 96ff828f54e870e5e8e8040e2b78804765ead4f932fe32a2189206c5eb368449 already has dfc htlc da94df627e829e59372287cf89dd98bc9afbd5326d72af22db2d453f91e13a0d
+Order 5e3986d18662db1600eaa682543ff17ce7496943d58cd577984f56df6983bc70 already has offer 96ff828f54e870e5e8e8040e2b78804765ead4f932fe32a2189206c5eb368449
+Checking spv htlc of offer 96ff828f54e870e5e8e8040e2b78804765ead4f932fe32a2189206c5eb368449
+Offer 96ff828f54e870e5e8e8040e2b78804765ead4f932fe32a2189206c5eb368449 already has spv htlc 2MzgDdVwmdPo8fEDuCm8qK3NHsVJhfqsLSW
+Offer id: 96ff828f54e870e5e8e8040e2b78804765ead4f932fe32a2189206c5eb368449 already claimed in btc tx [object Object]
+√ Completed: icx_listorders
+5e3986d18662db1600eaa682543ff17ce7496943d58cd577984f56df6983bc70 -> [object Object]
+Found order 5e3986d18662db1600eaa682543ff17ce7496943d58cd577984f56df6983bc70
+√ Completed: icx_listorders
+checkExistingDfcHtlc for offerId: 96ff828f54e870e5e8e8040e2b78804765ead4f932fe32a2189206c5eb368449
+Offer 96ff828f54e870e5e8e8040e2b78804765ead4f932fe32a2189206c5eb368449 already has dfc htlc da94df627e829e59372287cf89dd98bc9afbd5326d72af22db2d453f91e13a0d
+Order 5e3986d18662db1600eaa682543ff17ce7496943d58cd577984f56df6983bc70 already has offer 96ff828f54e870e5e8e8040e2b78804765ead4f932fe32a2189206c5eb368449
+Checking spv htlc of offer 96ff828f54e870e5e8e8040e2b78804765ead4f932fe32a2189206c5eb368449
+Offer 96ff828f54e870e5e8e8040e2b78804765ead4f932fe32a2189206c5eb368449 already has spv htlc 2MzgDdVwmdPo8fEDuCm8qK3NHsVJhfqsLSW
+Offer id: 96ff828f54e870e5e8e8040e2b78804765ead4f932fe32a2189206c5eb368449 already claimed in btc tx [object Object]
+√ Completed: icx_listorders
+5e3986d18662db1600eaa682543ff17ce7496943d58cd577984f56df6983bc70 -> [object Object]
+Found order 5e3986d18662db1600eaa682543ff17ce7496943d58cd577984f56df6983bc70
+√ Completed: icx_listorders
+checkExistingDfcHtlc for offerId: 96ff828f54e870e5e8e8040e2b78804765ead4f932fe32a2189206c5eb368449
+Offer 96ff828f54e870e5e8e8040e2b78804765ead4f932fe32a2189206c5eb368449 already has dfc htlc da94df627e829e59372287cf89dd98bc9afbd5326d72af22db2d453f91e13a0d
+Order 5e3986d18662db1600eaa682543ff17ce7496943d58cd577984f56df6983bc70 already has offer 96ff828f54e870e5e8e8040e2b78804765ead4f932fe32a2189206c5eb368449
+Checking spv htlc of offer 96ff828f54e870e5e8e8040e2b78804765ead4f932fe32a2189206c5eb368449
+Offer 96ff828f54e870e5e8e8040e2b78804765ead4f932fe32a2189206c5eb368449 already has spv htlc 2MzgDdVwmdPo8fEDuCm8qK3NHsVJhfqsLSW
+Offer id: 96ff828f54e870e5e8e8040e2b78804765ead4f932fe32a2189206c5eb368449 already claimed in btc tx [object Object]
+√ Completed: icx_listorders
+5e3986d18662db1600eaa682543ff17ce7496943d58cd577984f56df6983bc70 -> [object Object]
+Found order 5e3986d18662db1600eaa682543ff17ce7496943d58cd577984f56df6983bc70
+√ Completed: icx_listorders
+checkExistingDfcHtlc for offerId: 96ff828f54e870e5e8e8040e2b78804765ead4f932fe32a2189206c5eb368449
+Offer 96ff828f54e870e5e8e8040e2b78804765ead4f932fe32a2189206c5eb368449 already has dfc htlc da94df627e829e59372287cf89dd98bc9afbd5326d72af22db2d453f91e13a0d
+Order 5e3986d18662db1600eaa682543ff17ce7496943d58cd577984f56df6983bc70 already has offer 96ff828f54e870e5e8e8040e2b78804765ead4f932fe32a2189206c5eb368449
+Checking spv htlc of offer 96ff828f54e870e5e8e8040e2b78804765ead4f932fe32a2189206c5eb368449
+Offer 96ff828f54e870e5e8e8040e2b78804765ead4f932fe32a2189206c5eb368449 already has spv htlc 2MzgDdVwmdPo8fEDuCm8qK3NHsVJhfqsLSW
+Offer id: 96ff828f54e870e5e8e8040e2b78804765ead4f932fe32a2189206c5eb368449 already claimed in btc tx [object Object]
+√ Completed: icx_listorders
+5e3986d18662db1600eaa682543ff17ce7496943d58cd577984f56df6983bc70 -> [object Object]
+Found order 5e3986d18662db1600eaa682543ff17ce7496943d58cd577984f56df6983bc70
+√ Completed: icx_listorders
+checkExistingDfcHtlc for offerId: 96ff828f54e870e5e8e8040e2b78804765ead4f932fe32a2189206c5eb368449
+Offer 96ff828f54e870e5e8e8040e2b78804765ead4f932fe32a2189206c5eb368449 already has dfc htlc da94df627e829e59372287cf89dd98bc9afbd5326d72af22db2d453f91e13a0d
+Order 5e3986d18662db1600eaa682543ff17ce7496943d58cd577984f56df6983bc70 already has offer 96ff828f54e870e5e8e8040e2b78804765ead4f932fe32a2189206c5eb368449
+Checking spv htlc of offer 96ff828f54e870e5e8e8040e2b78804765ead4f932fe32a2189206c5eb368449
+Offer 96ff828f54e870e5e8e8040e2b78804765ead4f932fe32a2189206c5eb368449 already has spv htlc 2MzgDdVwmdPo8fEDuCm8qK3NHsVJhfqsLSW
+Offer id: 96ff828f54e870e5e8e8040e2b78804765ead4f932fe32a2189206c5eb368449 already claimed in btc tx [object Object]
+√ Completed: icx_listorders
+5e3986d18662db1600eaa682543ff17ce7496943d58cd577984f56df6983bc70 -> [object Object]
+Found order 5e3986d18662db1600eaa682543ff17ce7496943d58cd577984f56df6983bc70
+√ Completed: icx_listorders
+checkExistingDfcHtlc for offerId: 96ff828f54e870e5e8e8040e2b78804765ead4f932fe32a2189206c5eb368449
+Offer 96ff828f54e870e5e8e8040e2b78804765ead4f932fe32a2189206c5eb368449 already has dfc htlc da94df627e829e59372287cf89dd98bc9afbd5326d72af22db2d453f91e13a0d
+Order 5e3986d18662db1600eaa682543ff17ce7496943d58cd577984f56df6983bc70 already has offer 96ff828f54e870e5e8e8040e2b78804765ead4f932fe32a2189206c5eb368449
+Checking spv htlc of offer 96ff828f54e870e5e8e8040e2b78804765ead4f932fe32a2189206c5eb368449
+Offer 96ff828f54e870e5e8e8040e2b78804765ead4f932fe32a2189206c5eb368449 already has spv htlc 2MzgDdVwmdPo8fEDuCm8qK3NHsVJhfqsLSW
+Offer id: 96ff828f54e870e5e8e8040e2b78804765ead4f932fe32a2189206c5eb368449 already claimed in btc tx [object Object]
+√ Completed: icx_listorders
+5e3986d18662db1600eaa682543ff17ce7496943d58cd577984f56df6983bc70 -> [object Object]
+Found order 5e3986d18662db1600eaa682543ff17ce7496943d58cd577984f56df6983bc70
+√ Completed: icx_listorders
+checkExistingDfcHtlc for offerId: 96ff828f54e870e5e8e8040e2b78804765ead4f932fe32a2189206c5eb368449
+Offer 96ff828f54e870e5e8e8040e2b78804765ead4f932fe32a2189206c5eb368449 already has dfc htlc da94df627e829e59372287cf89dd98bc9afbd5326d72af22db2d453f91e13a0d
+Order 5e3986d18662db1600eaa682543ff17ce7496943d58cd577984f56df6983bc70 already has offer 96ff828f54e870e5e8e8040e2b78804765ead4f932fe32a2189206c5eb368449
+Checking spv htlc of offer 96ff828f54e870e5e8e8040e2b78804765ead4f932fe32a2189206c5eb368449
+Offer 96ff828f54e870e5e8e8040e2b78804765ead4f932fe32a2189206c5eb368449 already has spv htlc 2MzgDdVwmdPo8fEDuCm8qK3NHsVJhfqsLSW
+Offer id: 96ff828f54e870e5e8e8040e2b78804765ead4f932fe32a2189206c5eb368449 already claimed in btc tx [object Object]
+√ Completed: icx_listorders
+5e3986d18662db1600eaa682543ff17ce7496943d58cd577984f56df6983bc70 -> [object Object]
+Found order 5e3986d18662db1600eaa682543ff17ce7496943d58cd577984f56df6983bc70
+√ Completed: icx_listorders
+checkExistingDfcHtlc for offerId: 96ff828f54e870e5e8e8040e2b78804765ead4f932fe32a2189206c5eb368449
+Offer 96ff828f54e870e5e8e8040e2b78804765ead4f932fe32a2189206c5eb368449 already has dfc htlc da94df627e829e59372287cf89dd98bc9afbd5326d72af22db2d453f91e13a0d
+Order 5e3986d18662db1600eaa682543ff17ce7496943d58cd577984f56df6983bc70 already has offer 96ff828f54e870e5e8e8040e2b78804765ead4f932fe32a2189206c5eb368449
+Checking spv htlc of offer 96ff828f54e870e5e8e8040e2b78804765ead4f932fe32a2189206c5eb368449
+Offer 96ff828f54e870e5e8e8040e2b78804765ead4f932fe32a2189206c5eb368449 already has spv htlc 2MzgDdVwmdPo8fEDuCm8qK3NHsVJhfqsLSW
+Offer id: 96ff828f54e870e5e8e8040e2b78804765ead4f932fe32a2189206c5eb368449 already claimed in btc tx [object Object]
+√ Completed: icx_listorders
+5e3986d18662db1600eaa682543ff17ce7496943d58cd577984f56df6983bc70 -> [object Object]
+Found order 5e3986d18662db1600eaa682543ff17ce7496943d58cd577984f56df6983bc70
+√ Completed: icx_listorders
+checkExistingDfcHtlc for offerId: 96ff828f54e870e5e8e8040e2b78804765ead4f932fe32a2189206c5eb368449
+Offer 96ff828f54e870e5e8e8040e2b78804765ead4f932fe32a2189206c5eb368449 already has dfc htlc da94df627e829e59372287cf89dd98bc9afbd5326d72af22db2d453f91e13a0d
+Order 5e3986d18662db1600eaa682543ff17ce7496943d58cd577984f56df6983bc70 already has offer 96ff828f54e870e5e8e8040e2b78804765ead4f932fe32a2189206c5eb368449
+Checking spv htlc of offer 96ff828f54e870e5e8e8040e2b78804765ead4f932fe32a2189206c5eb368449
+Offer 96ff828f54e870e5e8e8040e2b78804765ead4f932fe32a2189206c5eb368449 already has spv htlc 2MzgDdVwmdPo8fEDuCm8qK3NHsVJhfqsLSW
+Offer id: 96ff828f54e870e5e8e8040e2b78804765ead4f932fe32a2189206c5eb368449 already claimed in btc tx [object Object]
+√ Completed: icx_listorders
+5e3986d18662db1600eaa682543ff17ce7496943d58cd577984f56df6983bc70 -> [object Object]
+Found order 5e3986d18662db1600eaa682543ff17ce7496943d58cd577984f56df6983bc70
+√ Completed: icx_listorders
+checkExistingDfcHtlc for offerId: 96ff828f54e870e5e8e8040e2b78804765ead4f932fe32a2189206c5eb368449
+Offer 96ff828f54e870e5e8e8040e2b78804765ead4f932fe32a2189206c5eb368449 already has dfc htlc da94df627e829e59372287cf89dd98bc9afbd5326d72af22db2d453f91e13a0d
+Order 5e3986d18662db1600eaa682543ff17ce7496943d58cd577984f56df6983bc70 already has offer 96ff828f54e870e5e8e8040e2b78804765ead4f932fe32a2189206c5eb368449
+Checking spv htlc of offer 96ff828f54e870e5e8e8040e2b78804765ead4f932fe32a2189206c5eb368449
+Offer 96ff828f54e870e5e8e8040e2b78804765ead4f932fe32a2189206c5eb368449 already has spv htlc 2MzgDdVwmdPo8fEDuCm8qK3NHsVJhfqsLSW
+Offer id: 96ff828f54e870e5e8e8040e2b78804765ead4f932fe32a2189206c5eb368449 already claimed in btc tx [object Object]
