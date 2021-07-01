@@ -5,7 +5,6 @@ const btcMakerAddress = Deno.args[5];
 let btcMakerPubkey = "";
 
 let mapOfferData = new Map();
-let objOfferDfcHtlc = new Object();
 let mapOfferDfcClaim = new Map();
 let objHashSeed = new Object();
 
@@ -125,10 +124,13 @@ async function acceptOfferIfAny(orderId) {
 
             const timeout = 500; // Must grater than 499, because CICXSubmitDFCHTLC::MINIMUM_TIMEOUT limit.
             const extHtlcTxid = await waitConfirmation(await rpcMethod('icx_submitexthtlc',
-                [{ "offerTx": key, "hash": hash, "amount": offerDetails["amountInFromAsset"],
-                "htlcScriptAddress": spvHtlc.result["address"], "ownerPubkey": btcMakerPubkey, "timeout": SPV_TIME }]));
+                [{"offerTx": key, "hash": hash, "amount": offerDetails["amountInFromAsset"],
+                "htlcScriptAddress": spvHtlc.result["address"], "ownerPubkey": btcMakerPubkey, "timeout": SPV_TIME}]));
 
-            const spvFundTxid = (await rpcMethod('spv_sendtoaddress', [spvHtlc.result["address"], offerDetails["amountInFromAsset"]])).result;
+            const spvFundTxid = (await waitSPVConnected(async () => {
+                return await rpcMethod('spv_sendtoaddress', [spvHtlc.result["address"], offerDetails["amountInFromAsset"]])
+            })).result;
+
             console.log("Fund spv htlc with txid result: " + JSON.stringify(spvFundTxid));
 
             let offerData = {"seed": seed, "hash": hash, "exthtlc": extHtlcTxid, "timeout": timeout, "amount": offerDetails["amountInFromAsset"] };
@@ -141,12 +143,7 @@ async function checkOfferDfcHtlc(offerData, offerId) {
     console.log("Checking dfc htlc of offer " + offerId);
 
     if (mapOfferDfcClaim.has(offerId)) {
-        console.log("Offer id: " + offerId + " already claimed in DFC tx " + mapOfferDfcClaim.get(offerId));
-        return;
-    }
-
-    if (objOfferDfcHtlc.hasOwnProperty(offerId)) {
-        console.log("Offer " + offerId + " already has DFC htlc " + objOfferDfcHtlc[offerId]);
+        console.log("Offer id: " + offerId + " already claimed in dBTC tx " + mapOfferDfcClaim.get(offerId));
         return;
     }
 
@@ -160,11 +157,9 @@ async function checkOfferDfcHtlc(offerData, offerId) {
         if (htlcDetails["type"] == "DFC" && htlcDetails["status"] == "OPEN" && offerId == htlcDetails["offerTx"]) {
             const offerData = mapOfferData.get(offerId);
 
-            const dfcClaimTxid = (await waitConfirmation(await rpcMethod('icx_claimdfchtlc',
-                [{ "dfchtlcTx": key, "seed": offerData["seed"]}]))).result;
-            mapOfferDfcClaim[offerId] = dfcClaimTxid;
-
-            console.log("Claimed DFC in txid: " + dfcClaimTxid);
+            const dfcClaimTxid = (await rpcMethod('icx_claimdfchtlc', [{"dfchtlcTx": key, "seed": offerData["seed"]}])).result;
+            console.log("Claimed dBTC in txid: " + JSON.stringify(dfcClaimTxid));
+            mapOfferDfcClaim.set(offerId, dfcClaimTxid.txid);
         }
     }
 }
@@ -178,16 +173,6 @@ async function loadExistingData() {
         }
     } catch (e) {
         console.log("Skipped to load hashseed.json");
-    }
-
-    try {
-        const textofferdfchtlc = Deno.readTextFileSync("./offerdfchtlc.json");
-        if (textofferdfchtlc.length > 0) {
-            objOfferDfcHtlc = JSON.parse(textofferdfchtlc);
-            console.log("objOfferDfcHtlc: " + JSON.stringify(objOfferDfcHtlc));
-        }
-    }catch (e) {
-        console.log("Skipped to load offerdfchtlc.json");
     }
 }
 
