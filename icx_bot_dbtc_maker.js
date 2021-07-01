@@ -1,6 +1,7 @@
 import { rpcMethod, waitConfirmation, ownerAddress, waitSPVConnected, createSeedHashPair, sleep } from './util.js';
 
 const maxOrderSize = 0.1;
+const minOrderLife = 500;
 const btcReceiveAddress = Deno.args[5];
 let btcReceiverPubkey = "";
 
@@ -22,9 +23,19 @@ async function createOrderIfNotExist() {
             if (orderDetails["type"] == "INTERNAL" &&
                 orderDetails["ownerAddress"] == ownerAddress &&
                 orderDetails["tokenFrom"] == "BTC" &&
-                orderDetails["chainTo"] == "BTC") {
-                console.log("Found order " + key);
-                return key;
+                orderDetails["chainTo"] == "BTC")
+            {
+                const chainInfo = (await rpcMethod('getblockchaininfo')).result;
+                const headerBlock = chainInfo["headers"];
+                console.log(`Order ${key} expiration height ${orderDetails["expireHeight"]}, blockchain header block ${headerBlock}`);
+                if (orderDetails["expireHeight"] > headerBlock + minOrderLife) {
+                    console.log("Found order " + key);
+                    return key;
+                }else {
+                    console.log(`Order ${key} is too old, close it`);
+                    const closeTxid = (await waitConfirmation(await rpcMethod('icx_closeorder', [key])));
+                    console.log(`Order ${key} is closed in tx ${closeTxid}`);
+                }
             }
         }
     }
