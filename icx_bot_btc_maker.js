@@ -136,11 +136,11 @@ async function acceptOfferIfAny(orderId) {
         console.log(`Order detail: ${JSON.stringify(offerDetails)}`);
         if (offerDetails["status"] == "OPEN") {
             const btcTakerPubkey = offerDetails["receivePubkey"];
-            const SPV_TIME = 40;
+            const SPV_TIMEOUT = 40;
             // Create the on maker side. Note. the timeout input is a string but not a number
             // If input number, will have "JSON value is not a string as expected" error.
             const spvHtlc = await waitSPVConnected(async () => {
-                return await rpcMethod('spv_createhtlc', [btcTakerPubkey, btcMakerPubkey, SPV_TIME.toString()]);
+                return await rpcMethod('spv_createhtlc', [btcTakerPubkey, btcMakerPubkey, SPV_TIMEOUT.toString()]);
             });
 
             if (spvHtlc["error"] != null) {
@@ -160,7 +160,7 @@ async function acceptOfferIfAny(orderId) {
             const timeout = 500; // Must grater than 499, because CICXSubmitDFCHTLC::MINIMUM_TIMEOUT limit.
             const extHtlcTxid = await waitConfirmation(await rpcMethod('icx_submitexthtlc',
                 [{"offerTx": key, "hash": hash, "amount": offerDetails["amountInFromAsset"],
-                "htlcScriptAddress": spvHtlc.result["address"], "ownerPubkey": btcMakerPubkey, "timeout": SPV_TIME}]), 0, true);
+                "htlcScriptAddress": spvHtlc.result["address"], "ownerPubkey": btcMakerPubkey, "timeout": SPV_TIMEOUT}]), 0, true);
 
             if (extHtlcTxid["error"] != null) {
                 sendAlarm("btc maker icx_submitexthtlc failed");
