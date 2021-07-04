@@ -62,7 +62,7 @@ export const waitConfirmation = async (txResult, waitUntil, hideSpinner) => {
             await kia.set({ text: `Confirming tx id: ${txHash} Confirmations: ${confirmations}` });
         }
         unconfirmed = confirmations <= (waitUntil ? waitUntil : 0);
-        unconfirmed && await sleep(1000);
+        unconfirmed && await sleep(5000);
     }
 
     if(!hideSpinner) {

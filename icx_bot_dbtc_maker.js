@@ -194,7 +194,13 @@ async function checkHtlcOutputAndClaim(offerId) {
             console.error("Offer " + offerId + " don't have htlc data");
             return;
         }
+
         const offerData = mapOfferData.get(offerId);
+        if (listSpvReceived[0]["amount"] != offerData["amount"]) {
+            console.error("The spv received amount not match with offer amount!");
+            return;
+        }
+
         const claimInput = [spvHtlc, btcReceiveAddress, offerData["seed"]];
         console.log("spv_claimhtlc input: " + JSON.stringify(claimInput));
         const claimBtcTxid = await waitSPVConnected(async () => {
