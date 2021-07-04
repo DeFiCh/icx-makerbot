@@ -113,6 +113,8 @@ const offerAmount = 0.0001;
             console.log("Claimed dBTC in txid: " + JSON.stringify(dfcClaimTxid));
             claimedDfcHtlc = true;
         }
+
+        console.log("The whole process finished");
     }catch(e) {
         console.error(e);
     }
