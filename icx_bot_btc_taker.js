@@ -1,6 +1,8 @@
-import { rpcMethod, waitConfirmation, ownerAddress, waitSPVConnected, createSeedHashPair, sleep } from './util.js';
+import { rpcMethod, waitConfirmation, waitSPVConnected, sleep } from './util1.js';
 
-const btcAddress = "tb1qvwch6aa9945sxryye70u6gl76celcfec7nkfcj";
+const ownerAddress  = Deno.args[4];
+const btcAddress    = Deno.args[5];
+
 var btcPubkey;
 const offerAmount = 0.0001;
 
