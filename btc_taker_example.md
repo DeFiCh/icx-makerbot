@@ -101,13 +101,13 @@ Example reply.
 ]
 ```
 
-6. If check the amount in step 4 is correct, submit the DFC HTLC. `hash` parameter must be the same as the forth parameter of `spv_createhtlc`.
+6. If check the amount in step 4 is correct, submit the DefiChain HTLC. `hash` parameter must be the same as the forth parameter of `spv_createhtlc`.
 
 ```
 ./defi-cli icx_submitdfchtlc '{"offerTx":"4f763da1bfa9e3f4a333cfdb28071a87b44613294b108edef052117a22dac18f","amount":0.0001,"hash":"bef9bf8f46ce1eea7a47725fe4613d574e79ce633ad7d8046da06ad040dcac41"}'
 ```
 
-7. Continually check if maker claimed the DFC htlc. If find the reply of below command has "type" is "CLAIM DFC", it means maker already claimed DFC HTLC.
+7. Continually check if maker claimed the DefiChain htlc. If find the reply of below command has "type" is "CLAIM DFC", it means maker already claimed DefiChain HTLC.
 
 ```
 ./defi-cli icx_listhtlcs '{"offerTx":"4f763da1bfa9e3f4a333cfdb28071a87b44613294b108edef052117a22dac18f"}'

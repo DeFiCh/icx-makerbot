@@ -11,18 +11,26 @@ It also performs the necessary steps to ensures the safety of the counter-party 
 
 This script requires Deno to be installed: https://deno.land/
 
+## Prerequisites
+
+The parameters are pass in to the script by environment variables, need to define 7 environment variables in `.bash_profile`. The `ALARM_HOOK` is optional.
+
+```
+export RPC_ADDRESS=127.0.0.1
+export RPC_PORT=18554
+export RPC_USER=user
+export RPC_PASSWORD=password
+export DFI_ADDRESS=7Jw72Q9yGJ1UWCXdQcUwkwSX48mkvdV2sS
+export SPV_BTC_ADDRESS=tb1qfdl5fs580x8ykqjngfvgdwhryu62r59q3tuaga
+export ALARM_HOOK="The slack webhook url"
+```
+
 ## Run the dBTC maker bot.
 
 Before run the script, make sure the account has enough dBTC token and DFI token, also need to have DFI utxos.
 
 ```
-deno run --allow-net --allow-write --allow-read icx_bot_dbtc_maker.js DefiChain_Node_Ip RPC_PORT RPC_USER RPC_PASSWORD DFI_ADDRESS SPV_BTC_ADDRESS
-```
-
-For example:
-
-```
-deno run --allow-net --allow-write --allow-read icx_bot_dbtc_maker.js 127.0.0.1 18554 test test 7Jw72Q9yGJ1UWCXdQcUwkwSX48mkvdV2sS tb1qfdl5fs580x8ykqjngfvgdwhryu62r59q3tuaga
+deno run --allow-all icx_bot_dbtc_maker.js
 ```
 
 ## Run the BTC maker bot.
@@ -30,11 +38,5 @@ deno run --allow-net --allow-write --allow-read icx_bot_dbtc_maker.js 127.0.0.1 
 Before run the script, make sure the account has enough BTC and DFI token, also need to have DFI utxos.
 
 ```
-deno run --allow-net --allow-write --allow-read icx_bot_btc_maker.js DefiChain_Node_Ip RPC_PORT RPC_USER RPC_PASSWORD DFI_ADDRESS SPV_BTC_ADDRESS
-```
-
-For example:
-
-```
-deno run --allow-net --allow-write --allow-read icx_bot_btc_maker.js 127.0.0.1 18554 test test tk7nuNxJ96tCAM57eT7Wx6pQYut8yReoZt tb1qvwch6aa9945sxryye70u6gl76celcfec7nkfcj
+deno run --allow-all icx_bot_btc_maker.js
 ```

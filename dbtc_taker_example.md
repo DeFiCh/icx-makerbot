@@ -62,7 +62,7 @@ Example reply.
 }
 ```
 
-4. Taker after see the above DFC htlc, also create on SPV. The first parameter is maker's BTC public key, it can be find the result of `icx_listorders`, the parameter "receivePubkey".  The second parameter is the taker's BTC pubkey, it can be get by command `spv_getaddresspubkey`. The forth parameter is the `hash` in last step result of `icx_listhtlcs`.
+4. Taker after see the above DefiChain htlc, also create on SPV. The first parameter is maker's BTC public key, it can be find the result of `icx_listorders`, the parameter "receivePubkey".  The second parameter is the taker's BTC pubkey, it can be get by command `spv_getaddresspubkey`. The forth parameter is the `hash` in last step result of `icx_listhtlcs`.
 
 ```
 ./defi-cli spv_createhtlc 03668b5dc4f33dab92cd5b70c034a88e0d2510b14e39f3995245acb4d8723c2b35 030eac7e179cf91d2dd3f275a2517e23564679a28e19e9bdd251cc8afdaf90cde1 20 5102a292d7efa74fcc780439bb02c87bb71328a15882197b7ab4d7400cab2123
@@ -96,7 +96,7 @@ Example reply.
 ./src/defi-cli -testnet -rpcport=18554 -rpcuser=test -rpcpassword=test spv_gethtlcseed 2MzgDdVwmdPo8fEDuCm8qK3NHsVJhfqsLSW
 ```
 
-8. Taker using the seed to claim DFC htlc. The DFC HTLC is in reply of `icx_listhtlcs` of step 3.
+8. Taker using the seed to claim DefiChain htlc. The DefiChain HTLC `dfchtlcTx` is in reply of `icx_listhtlcs` of step 3.
 
 ```
 ./src/defi-cli -testnet -rpcport=18554 -rpcuser=test -rpcpassword=test icx_claimdfchtlc '{"dfchtlcTx":"da94df627e829e59372287cf89dd98bc9afbd5326d72af22db2d453f91e13a0d","seed":"5026297f7c0455b55c49042d1c319fe046edc4141b50e5e1e06289d97f73a84e"}'
