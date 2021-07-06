@@ -4,7 +4,10 @@ import { createHash } from "https://deno.land/std@0.74.0/hash/mod.ts";
 import { cryptoRandomString } from "https://deno.land/x/crypto_random_string@1.0.0/mod.ts"
 import { decodeString } from "https://deno.land/std/encoding/hex.ts"
 
-export const ownerAddress = Deno.args[4];
+const rpcAddress = Deno.env.get("RPC_ADDRESS");
+const rpcPort = Deno.env.get("RPC_PORT");
+const rpcUser = Deno.env.get("RPC_USER");
+const rpcPassword = Deno.env.get("RPC_PASSWORD");
 
 export function sleep(ms) {
 	return new Promise((resolve) => setTimeout(resolve, ms));
@@ -18,11 +21,10 @@ export const rpcMethod = async (method, params, hideSpinner, ignoreError) => {
 
     let rpcData = {'jsonrpc': '1.0', 'id': 'rpctest', 'method': method, 'params': params || [] };
 
-
-    let res = await fetch(`http://${Deno.args[0]}:${Deno.args[1]}`, {
+    let res = await fetch(`http://${rpcAddress}:${rpcPort}`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json', 'Authorization': 'Basic ' + 
-                Base64.fromString(`${Deno.args[2]}:${Deno.args[3]}`).toString()},
+                Base64.fromString(`${rpcUser}:${rpcPassword}`).toString()},
             body: JSON.stringify(rpcData)
         }
     );
@@ -34,9 +36,7 @@ export const rpcMethod = async (method, params, hideSpinner, ignoreError) => {
         if(resJson.error && resJson.error.message) {
             console.error(resJson.error.message);
         }
-        Deno.exit();
     }
-
 
     if(!hideSpinner) {
         kia.succeed(`Completed: ${method}`);
@@ -46,6 +46,10 @@ export const rpcMethod = async (method, params, hideSpinner, ignoreError) => {
 }
 
 export const waitConfirmation = async (txResult, waitUntil, hideSpinner) => {
+    if (txResult.error != null) {
+        return txResult;
+    }
+
     const result = txResult.result ? txResult.result : txResult;
     const txHash = result.txid ? result.txid : result;
 
@@ -86,9 +90,9 @@ export const waitSPVConnected = async (callback, hideSpinner) => {
         }
         response = await callback();
 
-        if(response.error && response.error.code === -1) {
-            response = null;
-        }
+        // if(response.error && response.error.code === -1) {
+        //     response = null;
+        // }
 
         !response && await sleep(1000);
     }
@@ -120,17 +124,6 @@ export const waitEvent = async (callback, hideSpinner) => {
     }
 
     return;
-}
-
-export const fundUTXOS = async (address) => {
-    const kia = new Kia(`Funding UTXOs`);
-    address = address || ownerAddress;
-    kia.start();
-
-    const sendToAddress = await rpcMethod('sendtoaddress', [address, 1], true);
-    await waitConfirmation(sendToAddress, 1, true);
-
-    kia.succeed(`UTXOs funded`);
 }
 
 export const createSeedHashPair = (useSeed) => {

@@ -1,14 +1,29 @@
-import { rpcMethod, waitConfirmation, ownerAddress, waitSPVConnected, createSeedHashPair, sleep } from './util.js';
+import { rpcMethod, waitConfirmation, waitSPVConnected, createSeedHashPair, sleep } from './util.js';
 
 const maxOrderSize = 0.1;
 const minOrderLife = 500;
-const btcReceiveAddress = Deno.args[5];
+const ownerAddress = Deno.env.get("DFI_ADDRESS");
+const btcReceiveAddress = Deno.env.get("SPV_BTC_ADDRESS");
 let btcReceiverPubkey = "";
+const alarmHook = Deno.env.get("ALARM_HOOK");
 
 let mapOfferData = new Map();
 let objOfferSpvHtlc = new Object();
 let mapOfferSpvClaim = new Map();
 let objHashSeed = new Object();
+
+async function sendAlarm(msg) {
+    if (alarmHook == null)
+        return;
+
+    fetch(alarmHook, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ "text": msg }),
+    });
+}
 
 async function createOrderIfNotExist() {
     const orders = (await rpcMethod('icx_listorders')).result;
@@ -33,7 +48,7 @@ async function createOrderIfNotExist() {
                     return key;
                 }else {
                     console.log(`Order ${key} is too old, close it`);
-                    const closeTxid = (await waitConfirmation(await rpcMethod('icx_closeorder', [key])));
+                    const closeTxid = (await waitConfirmation(await rpcMethod('icx_closeorder', [key]), 0, true));
                     console.log(`Order ${key} is closed in tx ${closeTxid}`);
                 }
             }
@@ -51,7 +66,8 @@ async function createOrderIfNotExist() {
             }
         })
         console.log("BTC balance " + btcBalance);
-        if (btcBalance <= 0) {
+        if (btcBalance <= 0.0001) {
+            console.error("dBTC balance too low");
             return;
         }
 
@@ -62,7 +78,11 @@ async function createOrderIfNotExist() {
 
         console.log("Creating order with size " + orderSize);
         const orderTxId = await waitConfirmation(await rpcMethod('icx_createorder',
-            [{"ownerAddress": ownerAddress, "tokenFrom": "BTC", "chainTo": "BTC", "amountFrom": orderSize, "orderPrice": 1, "receivePubkey": btcReceiverPubkey}]));
+            [{"ownerAddress": ownerAddress, "tokenFrom": "BTC", "chainTo": "BTC", "amountFrom": orderSize, "orderPrice": 1, "receivePubkey": btcReceiverPubkey}]), 0, true);
+        if (orderTxId["error"] != null) {
+            sendAlarm("dbtc maker icx_createorder failed");
+            Deno.exit();
+        }
         console.log("created order " + orderTxId);
         return orderTxId;
     }
@@ -134,7 +154,12 @@ async function acceptOfferIfAny(orderId) {
 
             const timeout = 500; // Must grater than 499, because CICXSubmitDFCHTLC::MINIMUM_TIMEOUT limit.
             const dfcHtlcTxid = await waitConfirmation(await rpcMethod('icx_submitdfchtlc',
-                [{ "offerTx": key, "hash": hash, "amount": offerDetails["amount"], "timeout": timeout }]));
+                [{ "offerTx": key, "hash": hash, "amount": offerDetails["amount"], "timeout": timeout }]), 0, true);
+
+            if (dfcHtlcTxid["error"] != null) {
+                sendAlarm("dbtc maker icx_submitdfchtlc failed");
+                continue;
+            }
 
             let offerData = {"seed": seed, "hash": hash, "dfchtlc": dfcHtlcTxid, "timeout": timeout, "amount": offerDetails["amount"] };
             mapOfferData.set(key, offerData);
@@ -168,6 +193,11 @@ async function checkOfferSpvHtlc(offerData, offerId) {
             const spvHtlc = await waitSPVConnected(async () => {
                 return await rpcMethod('spv_createhtlc', [btcReceiverPubkey, htlcDetails["ownerPubkey"], htlcDetails["timeout"].toString(), htlcDetails["hash"]]);
             });
+
+            if (spvHtlc["error"] != null) {
+                sendAlarm("dbtc maker spv_createhtlc failed");
+                continue;
+            }
 
             objOfferSpvHtlc[offerId] = spvHtlc.result["address"];
 
@@ -206,6 +236,12 @@ async function checkHtlcOutputAndClaim(offerId) {
         const claimBtcTxid = await waitSPVConnected(async () => {
             return await rpcMethod('spv_claimhtlc', claimInput, false, false);
         });
+
+        if (claimBtcTxid["error"] != null) {
+            sendAlarm("dbtc maker spv_createhtlc failed");
+            return;
+        }
+
         console.log("SPV claim txid: " + claimBtcTxid.result["txid"]);
         mapOfferSpvClaim.set(offerId, claimBtcTxid);
 
@@ -239,9 +275,13 @@ async function loadExistingData() {
 
 (async() => {
     try{
+        if (ownerAddress == null) {
+            console.error("Please define DFI_ADDRESS in environment variable");
+            return;
+        }
 
         if (!btcReceiveAddress || btcReceiveAddress.length <= 0) {
-            console.error("Please input the btc receiver address");
+            console.error("Please define SPV_BTC_ADDRESS in environment variable");
             return;
         }
         
