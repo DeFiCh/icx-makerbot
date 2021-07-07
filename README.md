@@ -5,7 +5,7 @@ ICX Parity Maker Bot
 
 This bot interfaces with DeFiChain node, monitors for available BTC and dBTC at specified address(es), adds the entirety of it to ICX as maker at parity, i.e. 1 BTC for 1dBTC and vice versa.
 
-It also performs the necessary steps to ensures the safety of the counter-party steps and follows through when it determines to be safe.
+The bot will perform the necessary steps to ensure the safety of the counter-party's steps and follows through when it determines that it's safe.
 
 ## Installation
 
@@ -13,7 +13,7 @@ This script requires Deno to be installed: https://deno.land/
 
 ## Prerequisites
 
-The parameters are pass in to the script by environment variables, need to define 7 environment variables in `.bash_profile`. The `ALARM_HOOK` is optional.
+The parameters are pass in to the script via several environment variables, you need to define 7 environment variables in `.bash_profile`. The `ALARM_HOOK` is optional.
 
 ```
 export RPC_ADDRESS=127.0.0.1
@@ -27,7 +27,7 @@ export ALARM_HOOK="The slack webhook url"
 
 ## Run the dBTC maker bot.
 
-Before run the script, make sure the account has enough dBTC token and DFI token, also need to have DFI utxos.
+Before running the script, ensure your account has sufficient dBTC token and tokenDFI, utxoDFI is also required.
 
 ```
 deno run --allow-all icx_bot_dbtc_maker.js
@@ -35,7 +35,7 @@ deno run --allow-all icx_bot_dbtc_maker.js
 
 ## Run the BTC maker bot.
 
-Before run the script, make sure the account has enough BTC and DFI token, also need to have DFI utxos.
+Before running the script, ensure your account has sufficient BTC and tokenDFI, utxoDFI is also required.
 
 ```
 deno run --allow-all icx_bot_btc_maker.js
