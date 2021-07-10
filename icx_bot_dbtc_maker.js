@@ -117,7 +117,7 @@ async function checkExistingDfcHtlc(offerId) {
 }
 
 async function acceptOfferIfAny(orderId) {
-    if (orderId.length <= 0) {
+    if (orderId == null || orderId.length <= 0) {
         console.error("empty order id input");
         return;
     }
@@ -243,7 +243,7 @@ async function checkHtlcOutputAndClaim(offerId) {
         }
 
         console.log("SPV claim txid: " + claimBtcTxid.result["txid"]);
-        mapOfferSpvClaim.set(offerId, claimBtcTxid);
+        mapOfferSpvClaim.set(offerId, claimBtcTxid.result["txid"]);
 
         // Erase the offer spv htlc, so don't check again.
         delete objOfferSpvHtlc[offerId];

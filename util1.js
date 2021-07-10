@@ -90,9 +90,9 @@ export const waitSPVConnected = async (callback, hideSpinner) => {
         }
         response = await callback();
 
-        // if(response.error && response.error.code === -1) {
-        //     response = null;
-        // }
+        if(response.error && response.error.code === -1) {
+            response = null;
+        }
 
         !response && await sleep(1000);
     }

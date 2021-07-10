@@ -107,7 +107,7 @@ async function checkExistingExtHtlc(offerId) {
 }
 
 async function acceptOfferIfAny(orderId) {
-    if (orderId.length <= 0) {
+    if (orderId == null || orderId.length <= 0) {
         console.error("empty order id input");
         return;
     }
@@ -157,6 +157,26 @@ async function acceptOfferIfAny(orderId) {
             objHashSeed[hash] = seed;
             Deno.writeTextFileSync("./hashseed.json", JSON.stringify(objHashSeed));
 
+            // Fund the spv htlc
+            const spvFundRpy = (await waitSPVConnected(async () => {
+                return await rpcMethod('spv_sendtoaddress', [spvHtlc.result["address"], offerDetails["amountInFromAsset"]])
+            }));
+            // const spvFundTxid = (await rpcMethod('spv_sendtoaddress', [spvHtlc.result["address"], offerDetails["amountInFromAsset"]])).result;
+
+            if (spvFundRpy["error"] != null) {
+                sendAlarm("btc maker spv_sendtoaddress failed");
+                continue;
+            }
+
+            const spvFundTxid = spvFundRpy.result;
+
+            if (spvFundTxid["txid"] == null) {
+                sendAlarm("btc maker spv_sendtoaddress returns null");
+                continue;
+            }
+
+            console.log(`Fund spv htlc ${spvHtlc.result["address"]} with txid result: ${spvFundTxid["txid"]}`);
+
             const timeout = 500; // Must grater than 499, because CICXSubmitDFCHTLC::MINIMUM_TIMEOUT limit.
             const extHtlcTxid = await waitConfirmation(await rpcMethod('icx_submitexthtlc',
                 [{"offerTx": key, "hash": hash, "amount": offerDetails["amountInFromAsset"],
@@ -166,18 +186,7 @@ async function acceptOfferIfAny(orderId) {
                 sendAlarm("btc maker icx_submitexthtlc failed");
                 continue;
             }
-
-            const spvFundTxid = (await waitSPVConnected(async () => {
-                return await rpcMethod('spv_sendtoaddress', [spvHtlc.result["address"], offerDetails["amountInFromAsset"]])
-            })).result;
-
-            if (spvFundTxid["error"] != null) {
-                sendAlarm("btc maker spv_sendtoaddress failed");
-                continue;
-            }
-
-            console.log("Fund spv htlc with txid result: " + JSON.stringify(spvFundTxid));
-
+            console.log(`icx_submitexthtlc txid: ${extHtlcTxid}`);
             let offerData = {"seed": seed, "hash": hash, "exthtlc": extHtlcTxid, "timeout": timeout, "amount": offerDetails["amountInFromAsset"] };
             mapOfferData.set(key, offerData);
         }

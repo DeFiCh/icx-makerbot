@@ -23,6 +23,10 @@ const offerAmount = 0.0001;
         for (var key in orders) {
             if (key == "WARNING")
                 continue;
+
+            // if (key != "b65784e0c8ac2afa3d40299eb3086a92f2cb6c61a5364ff1c5b4d832efda41fd")
+            //     continue;
+
             if (orders.hasOwnProperty(key)) {
                 console.log(key + " -> " + orders[key]);
                 const orderDetails = orders[key];
