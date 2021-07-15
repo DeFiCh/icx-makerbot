@@ -77,7 +77,7 @@ const offerAmount = 0.0001;
                     dfchtlcTx = key;
                     dfcHtlcDetails = htlcDetails;
 
-                    const SPV_TIMEOUT = 20;
+                    const SPV_TIMEOUT = 30; // Must greater than CICXSubmitEXTHTLC::EUNOSPAYA_MINIMUM_2ND_TIMEOUT = 24;
                     // Create the HTLC on taker side
                     const spvHtlc = await waitSPVConnected(async () => {
                         return await rpcMethod('spv_createhtlc', [dbtcOrderDetails["receivePubkey"], btcPubkey, SPV_TIMEOUT.toString(), htlcDetails["hash"]]);
