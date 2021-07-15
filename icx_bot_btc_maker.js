@@ -136,7 +136,7 @@ async function acceptOfferIfAny(orderId) {
         console.log(`Order detail: ${JSON.stringify(offerDetails)}`);
         if (offerDetails["status"] == "OPEN") {
             const btcTakerPubkey = offerDetails["receivePubkey"];
-            const SPV_TIMEOUT = 40;
+            const SPV_TIMEOUT = 80;  // Must greater than CICXSubmitEXTHTLC::EUNOSPAYA_MINIMUM_TIMEOUT = 72;
             // Create the on maker side. Note. the timeout input is a string but not a number
             // If input number, will have "JSON value is not a string as expected" error.
             const spvHtlc = await waitSPVConnected(async () => {
@@ -177,7 +177,6 @@ async function acceptOfferIfAny(orderId) {
 
             console.log(`Fund spv htlc ${spvHtlc.result["address"]} with txid result: ${spvFundTxid["txid"]}`);
 
-            const timeout = 500; // Must grater than 499, because CICXSubmitDFCHTLC::MINIMUM_TIMEOUT limit.
             const extHtlcTxid = await waitConfirmation(await rpcMethod('icx_submitexthtlc',
                 [{"offerTx": key, "hash": hash, "amount": offerDetails["amountInFromAsset"],
                 "htlcScriptAddress": spvHtlc.result["address"], "ownerPubkey": btcMakerPubkey, "timeout": SPV_TIMEOUT}]), 0, true);
@@ -187,7 +186,7 @@ async function acceptOfferIfAny(orderId) {
                 continue;
             }
             console.log(`icx_submitexthtlc txid: ${extHtlcTxid}`);
-            let offerData = {"seed": seed, "hash": hash, "exthtlc": extHtlcTxid, "timeout": timeout, "amount": offerDetails["amountInFromAsset"] };
+            let offerData = {"seed": seed, "hash": hash, "exthtlc": extHtlcTxid, "timeout": SPV_TIMEOUT, "amount": offerDetails["amountInFromAsset"] };
             mapOfferData.set(key, offerData);
         }
     }

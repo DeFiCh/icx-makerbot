@@ -152,7 +152,7 @@ async function acceptOfferIfAny(orderId) {
             objHashSeed[hash] = seed;
             Deno.writeTextFileSync("./hashseed.json", JSON.stringify(objHashSeed));
 
-            const timeout = 500; // Must grater than 499, because CICXSubmitDFCHTLC::MINIMUM_TIMEOUT limit.
+            const timeout = 1500; // Must grater than 1439, because CICXSubmitDFCHTLC::MINIMUM_TIMEOUT limit.
             const dfcHtlcTxid = await waitConfirmation(await rpcMethod('icx_submitdfchtlc',
                 [{ "offerTx": key, "hash": hash, "amount": offerDetails["amount"], "timeout": timeout }]), 0, true);
 
