@@ -65,7 +65,7 @@ Example reply.
 4. Taker after see the above DefiChain htlc, also create on SPV. The first parameter is maker's BTC public key, it can be find the result of `icx_listorders`, the parameter "receivePubkey".  The second parameter is the taker's BTC pubkey, it can be get by command `spv_getaddresspubkey`. The forth parameter is the `hash` in last step result of `icx_listhtlcs`.
 
 ```
-./defi-cli spv_createhtlc 03668b5dc4f33dab92cd5b70c034a88e0d2510b14e39f3995245acb4d8723c2b35 030eac7e179cf91d2dd3f275a2517e23564679a28e19e9bdd251cc8afdaf90cde1 20 5102a292d7efa74fcc780439bb02c87bb71328a15882197b7ab4d7400cab2123
+./defi-cli spv_createhtlc 03668b5dc4f33dab92cd5b70c034a88e0d2510b14e39f3995245acb4d8723c2b35 030eac7e179cf91d2dd3f275a2517e23564679a28e19e9bdd251cc8afdaf90cde1 30 5102a292d7efa74fcc780439bb02c87bb71328a15882197b7ab4d7400cab2123
 ```
 
 Example reply.
@@ -84,10 +84,10 @@ Example reply.
 
 ```
 
-6. Submit the external HTLC to DFI. "htlcScriptAddress" is the address created by RPC `spv_createhtlc` in step 4. The `hash` is the `hash` in last step result of `icx_listhtlcs`.
+6. Submit the external HTLC to DFI. "htlcScriptAddress" is the address created by RPC `spv_createhtlc` in step 4. The `hash` is the `hash` in last step result of `icx_listhtlcs`. The `timeout` should be the same as the timeout used in step 4 to create spv HTLC.
 
 ```
-./src/defi-cli -testnet -rpcport=18554 -rpcuser=test -rpcpassword=test icx_submitexthtlc '{"offerTx":"96ff828f54e870e5e8e8040e2b78804765ead4f932fe32a2189206c5eb368449","hash":"5102a292d7efa74fcc780439bb02c87bb71328a15882197b7ab4d7400cab2123","amount":"0.0001","htlcScriptAddress":"2MzgDdVwmdPo8fEDuCm8qK3NHsVJhfqsLSW","ownerPubkey":"030eac7e179cf91d2dd3f275a2517e23564679a28e19e9bdd251cc8afdaf90cde1","timeout":20}'
+./src/defi-cli -testnet -rpcport=18554 -rpcuser=test -rpcpassword=test icx_submitexthtlc '{"offerTx":"96ff828f54e870e5e8e8040e2b78804765ead4f932fe32a2189206c5eb368449","hash":"5102a292d7efa74fcc780439bb02c87bb71328a15882197b7ab4d7400cab2123","amount":"0.0001","htlcScriptAddress":"2MzgDdVwmdPo8fEDuCm8qK3NHsVJhfqsLSW","ownerPubkey":"030eac7e179cf91d2dd3f275a2517e23564679a28e19e9bdd251cc8afdaf90cde1","timeout":30}'
 ```
 
 7. Taker continually check if the maker claimed the SPV HTLC by below command until it get the HTLC seed.
