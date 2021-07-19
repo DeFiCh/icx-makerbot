@@ -1,7 +1,8 @@
 import { rpcMethod, waitConfirmation, waitSPVConnected, createSeedHashPair, sleep } from './util.js';
 
 const maxOrderSize = 0.1;
-const minOrderLife = 500;
+const orderTimeout = 5000;
+const minOrderLife = 1500;
 const ownerAddress = Deno.env.get("DFI_ADDRESS");
 const btcReceiveAddress = Deno.env.get("SPV_BTC_ADDRESS");
 let btcReceiverPubkey = "";
@@ -78,7 +79,14 @@ async function createOrderIfNotExist() {
 
         console.log("Creating order with size " + orderSize);
         const orderTxId = await waitConfirmation(await rpcMethod('icx_createorder',
-            [{"ownerAddress": ownerAddress, "tokenFrom": "BTC", "chainTo": "BTC", "amountFrom": orderSize, "orderPrice": 1, "receivePubkey": btcReceiverPubkey}]), 0, true);
+            [{"ownerAddress": ownerAddress,
+              "tokenFrom": "BTC",
+              "chainTo": "BTC",
+              "amountFrom": orderSize,
+              "orderPrice": 1,
+              "receivePubkey": btcReceiverPubkey,
+              "expiry": orderTimeout}]),
+              0, true);
         if (orderTxId["error"] != null) {
             sendAlarm("dbtc maker icx_createorder failed");
             Deno.exit();
