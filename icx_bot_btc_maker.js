@@ -11,6 +11,7 @@ const alarmHook = Deno.env.get("ALARM_HOOK");
 let mapOfferData = new Map();
 let mapOfferDfcClaim = new Map();
 let objHashSeed = new Object();
+let objSpvHtlcExpire = new Object();
 
 async function sendAlarm(msg) {
     if (alarmHook == null)
@@ -32,7 +33,7 @@ async function createOrderIfNotExist() {
         if (key == "WARNING")
             continue;
         if (orders.hasOwnProperty(key)) {
-            console.log(key + " -> " + orders[key]);
+            console.log(key + " -> " + JSON.stringify(orders[key]));
             const orderDetails = orders[key];
             if (orderDetails["type"] == "EXTERNAL" &&
                 orderDetails["ownerAddress"] == ownerAddress &&
@@ -141,6 +142,21 @@ async function acceptOfferIfAny(orderId) {
         const offerDetails = listOrderOffers[key];
         console.log(`Order detail: ${JSON.stringify(offerDetails)}`);
         if (offerDetails["status"] == "OPEN") {
+            const res = (await rpcMethod('spv_syncstatus'));
+            if (res["result"] == null || !res["result"]["connected"]) {
+                console.warn("spv not connected");
+                sendAlarm("btc maker spv not connected");
+                continue;
+            }
+
+            if (res["result"]["current"] != res["result"]["estimated"]) {
+                console.warn("spv not full synced");
+                sendAlarm("btc maker spv not full synced");
+                continue;
+            }
+
+            const btcBlock = res["result"]["current"];
+
             const btcTakerPubkey = offerDetails["receivePubkey"];
             const SPV_TIMEOUT = 80;  // Must greater than CICXSubmitEXTHTLC::EUNOSPAYA_MINIMUM_TIMEOUT = 72;
             // Create the on maker side. Note. the timeout input is a string but not a number
@@ -180,6 +196,12 @@ async function acceptOfferIfAny(orderId) {
                 sendAlarm("btc maker spv_sendtoaddress returns null");
                 continue;
             }
+            
+            
+            const syncStatus = ["result"]["current"];
+
+            objSpvHtlcExpire[spvHtlc.result["address"]] = btcBlock + SPV_TIMEOUT + 2;
+            Deno.writeTextFileSync("./spvhtlcexpire.json", JSON.stringify(objSpvHtlcExpire));
 
             console.log(`Fund spv htlc ${spvHtlc.result["address"]} with txid result: ${spvFundTxid["txid"]}`);
 
@@ -238,6 +260,65 @@ async function loadExistingData() {
     } catch (e) {
         console.log("Skipped to load hashseed.json");
     }
+
+    try {
+        const textspvHtlcExpire = Deno.readTextFileSync("./spvhtlcexpire.json");
+        if (textspvHtlcExpire.length > 0) {
+            objSpvHtlcExpire = JSON.parse(textspvHtlcExpire);
+            console.log("objSpvHtlcExpire: " + JSON.stringify(objSpvHtlcExpire));
+        }
+    } catch (e) {
+        console.log("Skipped to load spvhtlcexpire.json");
+    }
+}
+
+async function claimExpiredSpvHtlc() {
+    const res = (await rpcMethod('spv_syncstatus'));
+    if (res["result"] == null || !res["result"]["connected"]) {
+        console.warn("spv not connected");
+        sendAlarm("btc maker spv not connected");
+        return;
+    }
+
+    if (res["result"]["current"] != res["result"]["estimated"]) {
+        console.warn("spv not full synced");
+        sendAlarm("btc maker spv not full synced");
+        return;
+    }
+    const btcBlock = res["result"]["current"];
+
+    let spvHtlcToRemove = Array();
+    for (const spvHtlc in objSpvHtlcExpire) {
+        const expireBlock = objSpvHtlcExpire[spvHtlc];
+
+        if (btcBlock > expireBlock) {
+            spvHtlcToRemove.push(spvHtlc);
+            const res = (await rpcMethod('spv_refundhtlc', [spvHtlc, btcMakerAddress]));
+            if (res["error"] != null) {
+                console.log(`SPV HTLC ${spvHtlc} already claimed`);
+            }else if (res["result"] != null && res["result"]["txid"]) {
+                console.log(`Successfully claimed back btc in SPV HTLC ${spvHtlc} in txid ${res["result"]["txid"]}`);
+            }
+        }
+    }
+
+    if (spvHtlcToRemove.length > 0) {
+        // Remove the already checked one
+        spvHtlcToRemove.forEach((spvHtlc) => {
+            delete objSpvHtlcExpire[spvHtlc];
+
+            Deno.writeTextFileSync("./claimedspvhtlc.json", spvHtlc + "\n", { append: true});
+
+            console.log(`Delete spv htlc expire ${spvHtlc}`);
+        });
+
+        if (Object.keys(objSpvHtlcExpire).length > 0) {
+            Deno.writeTextFileSync("./spvhtlcexpire.json", JSON.stringify(objSpvHtlcExpire));
+        }else {
+            console.log(`Remove file spvhtlcexpire.json`);
+            Deno.removeSync("./spvhtlcexpire.json");
+        }
+    }
 }
 
 (async() => {
@@ -267,6 +348,8 @@ async function loadExistingData() {
             await acceptOfferIfAny(orderTxId);
             
             await mapOfferData.forEach(checkOfferDfcHtlc);
+
+            claimExpiredSpvHtlc();
 
             await sleep(20000);
         }
