@@ -57,7 +57,7 @@ Example reply when the offer is accepted.
     "hash": "bef9bf8f46ce1eea7a47725fe4613d574e79ce633ad7d8046da06ad040dcac41",
     "htlcScriptAddress": "2NAuLuHtM8h7vEceNkh9xjh9CRximBNtLd4",
     "ownerPubkey": "03668b5dc4f33dab92cd5b70c034a88e0d2510b14e39f3995245acb4d8723c2b35",
-    "timeout": 40,
+    "timeout": 80,
     "height": 419930
   }
 }
@@ -67,7 +67,7 @@ Example reply when the offer is accepted.
 the third parameter is the `timeout` is last step's reply, the forth parameter is `hash` in last step's reply.
 
 ```
-./defi-cli spv_createhtlc 030eac7e179cf91d2dd3f275a2517e23564679a28e19e9bdd251cc8afdaf90cde1 03668b5dc4f33dab92cd5b70c034a88e0d2510b14e39f3995245acb4d8723c2b35 40 bef9bf8f46ce1eea7a47725fe4613d574e79ce633ad7d8046da06ad040dcac41
+./defi-cli spv_createhtlc 030eac7e179cf91d2dd3f275a2517e23564679a28e19e9bdd251cc8afdaf90cde1 03668b5dc4f33dab92cd5b70c034a88e0d2510b14e39f3995245acb4d8723c2b35 80 bef9bf8f46ce1eea7a47725fe4613d574e79ce633ad7d8046da06ad040dcac41
 ```
 
 Example reply.
