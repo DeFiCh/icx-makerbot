@@ -34,7 +34,7 @@ async function createOrderIfNotExist() {
         if (key == "WARNING")
             continue;
         if (orders.hasOwnProperty(key)) {
-            console.log(key + " -> " + orders[key]);
+            console.log(key + " -> " + JSON.stringify(orders[key]));
             const orderDetails = orders[key];
             if (orderDetails["type"] == "INTERNAL" &&
                 orderDetails["ownerAddress"] == ownerAddress &&
