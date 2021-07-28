@@ -2,7 +2,7 @@ import { Base64 } from "https://deno.land/x/bb64/mod.ts";
 import Kia from "https://deno.land/x/kia@0.3.0/mod.ts";
 import { createHash } from "https://deno.land/std@0.74.0/hash/mod.ts";
 import { cryptoRandomString } from "https://deno.land/x/crypto_random_string@1.0.0/mod.ts"
-import { decodeString } from "https://deno.land/std/encoding/hex.ts"
+import { decode } from "https://deno.land/std/encoding/hex.ts"
 
 const rpcAddress = Deno.env.get("RPC_ADDRESS");
 const rpcPort = Deno.env.get("RPC_PORT");
@@ -129,7 +129,7 @@ export const waitEvent = async (callback, hideSpinner) => {
 export const createSeedHashPair = (useSeed) => {
     const seed = useSeed || cryptoRandomString({length: 64});
     let hash = createHash('sha256');
-    hash.update(decodeString(seed));
+    hash.update(decode(seed));
     
     return { seed: seed, hash: hash.toString('hex')};
 }
