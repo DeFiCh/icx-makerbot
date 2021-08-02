@@ -1,6 +1,5 @@
 import { rpcMethod, waitConfirmation, waitSPVConnected, createSeedHashPair, sleep } from './util.js';
 
-const maxOrderSize = 0.1;
 const orderTimeout = 5000;
 const minOrderLife = 1500;
 const ownerAddress = Deno.env.get("DFI_ADDRESS");
@@ -63,10 +62,7 @@ async function createOrderIfNotExist() {
             return;
         }
 
-        let orderSize = btcBalance;
-        if (orderSize > maxOrderSize) {
-            orderSize = maxOrderSize;
-        }
+        const orderSize = btcBalance;
 
         console.log("Creating order with size " + orderSize);
         const orderTxId = await waitConfirmation(await rpcMethod('icx_createorder',
