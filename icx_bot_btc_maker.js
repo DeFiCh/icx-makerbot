@@ -1,4 +1,6 @@
-import { rpcMethod, waitConfirmation, waitSPVConnected, createSeedHashPair, sleep } from './util.js';
+import { rpcMethod, waitConfirmation, waitSPVConnected, sleep } from './util.js';
+import { difference } from "https://deno.land/std@0.103.0/datetime/mod.ts";
+import { time } from "https://deno.land/x/time.ts@v2.0.1/mod.ts";
 
 const orderTimeout = 5000;
 const minOrderLife = 1500;
@@ -11,6 +13,9 @@ let mapOfferData = new Map();
 let mapOfferDfcClaim = new Map();
 let objHashSeed = new Object();
 let objSpvHtlcExpire = new Object();
+
+const checkOrderSizeInterval = 1; // every hour check order size
+let checkOrderSizeTime = new Date("2021-01-01"); // Set to an old time so when restart the script will check first.
 
 async function sendAlarm(msg) {
     if (alarmHook == null)
@@ -28,6 +33,9 @@ async function sendAlarm(msg) {
 async function createOrderIfNotExist() {
     const orders = (await rpcMethod('icx_listorders')).result;
     var foundOrder = false;
+    const btcBalance = parseFloat((await rpcMethod('spv_getbalance', [])).result);
+    console.log("BTC balance " + btcBalance);
+
     for (var key in orders) {
         if (key == "WARNING")
             continue;
@@ -42,7 +50,28 @@ async function createOrderIfNotExist() {
                 const chainInfo = (await rpcMethod('getblockchaininfo')).result;
                 const headerBlock = chainInfo["headers"];
                 console.log(`Order ${key} expiration height ${orderDetails["expireHeight"]}, blockchain header block ${headerBlock}`);
+
                 if (orderDetails["expireHeight"] > headerBlock + minOrderLife) {
+                    const timeDiffInHours = difference(time().now(), checkOrderSizeTime, { units: ["hours"]})["hours"];
+                    if (timeDiffInHours > checkOrderSizeInterval) {
+                        if (Math.abs(orderDetails["amountToFill"] - btcBalance) > 0.00001) {
+                            const listOrderOffers = (await rpcMethod('icx_listorders', [{ "orderTx": key }])).result;
+                            
+                            let hasOffer = false;
+                            for (var offerKey in listOrderOffers) {
+                                if (offerKey == "WARNING")
+                                    continue;
+                                hasOffer = true;
+                            }
+                            // If the order size not match with balance and it don't have offer now, then close the order and recreate a new order.
+                            if (!hasOffer) {
+                                console.log(`Order ${key} size ${orderDetails["amountToFill"]} not match with the btc balance, close it and recreate new one`);
+                                const closeTxid = await waitConfirmation(await rpcMethod('icx_closeorder', [key]), 0, true);
+                                console.log(`Order ${key} is closed in tx ${closeTxid}`);
+                                continue;
+                            }
+                        }
+                    }
                     console.log("Found order " + key);
                     return key;
                 }else {
@@ -55,8 +84,6 @@ async function createOrderIfNotExist() {
     }
 
     if (!foundOrder) {
-        const btcBalance = parseFloat((await rpcMethod('spv_getbalance', [])).result);
-        console.log("BTC balance " + btcBalance);
         if (btcBalance <= 0.0001) {
             console.error("BTC balance too low");
             return;
@@ -76,6 +103,7 @@ async function createOrderIfNotExist() {
             sendAlarm("btc maker icx_createorder failed");
             Deno.exit();
         }
+        checkOrderSizeTime = time().now();
         console.log("created order " + orderTxId);
         return orderTxId;
     }
@@ -192,8 +220,7 @@ async function acceptOfferIfAny(orderId) {
                 sendAlarm("btc maker spv_sendtoaddress returns null");
                 continue;
             }
-            
-            
+
             const syncStatus = ["result"]["current"];
 
             objSpvHtlcExpire[spvHtlc.result["address"]] = btcBlock + SPV_TIMEOUT + 2;
