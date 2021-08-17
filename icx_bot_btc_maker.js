@@ -18,6 +18,8 @@ const checkOrderSizeInterval = 1; // every hour check order size
 let checkOrderSizeTime = new Date("2021-01-01"); // Set to an old time so when restart the script will check first.
 
 async function sendAlarm(msg) {
+    console.log(msg);
+
     if (alarmHook == null)
         return;
 
@@ -67,7 +69,7 @@ async function createOrderIfNotExist() {
                             if (!hasOffer) {
                                 console.log(`Order ${key} size ${orderDetails["amountToFill"]} not match with the btc balance, close it and recreate new one`);
                                 const closeTxid = await waitConfirmation(await rpcMethod('icx_closeorder', [key]), 0, true);
-                                console.log(`Order ${key} is closed in tx ${closeTxid}`);
+                                sendAlarm(`[btc maker] Order ${key} is closed in tx ${closeTxid}`);
                                 continue;
                             }
                         }
@@ -77,7 +79,7 @@ async function createOrderIfNotExist() {
                 }else {
                     console.log(`Order ${key} is too old, close it`);
                     const closeTxid = await waitConfirmation(await rpcMethod('icx_closeorder', [key]), 0, true);
-                    console.log(`Order ${key} is closed in tx ${closeTxid}`);
+                    sendAlarm(`[btc maker] Order ${key} is closed in tx ${closeTxid}`);
                 }
             }
         }
@@ -100,11 +102,11 @@ async function createOrderIfNotExist() {
               "orderPrice": 1,
               "expiry": orderTimeout}]), 0, true);
         if (orderTxId["error"] != null) {
-            sendAlarm("btc maker icx_createorder failed");
+            sendAlarm("[btc maker] icx_createorder failed");
             Deno.exit();
         }
         checkOrderSizeTime = time().now();
-        console.log("created order " + orderTxId);
+        sendAlarm("[btc maker] created order " + orderTxId);
         return orderTxId;
     }
 }
@@ -164,18 +166,19 @@ async function acceptOfferIfAny(orderId) {
 
         console.log(key + " -> " + listOrderOffers[key]);
         const offerDetails = listOrderOffers[key];
-        console.log(`Order detail: ${JSON.stringify(offerDetails)}`);
+        console.log(`Offer detail: ${JSON.stringify(offerDetails)}`);
         if (offerDetails["status"] == "OPEN") {
+            sendAlarm(`[btc maker] received offer ${key} with amount ${offerDetails["amount"]}`);
             const res = (await rpcMethod('spv_syncstatus'));
             if (res["result"] == null || !res["result"]["connected"]) {
                 console.warn("spv not connected");
-                sendAlarm("btc maker spv not connected");
+                sendAlarm("[btc maker] spv not connected");
                 continue;
             }
 
             if (res["result"]["current"] != res["result"]["estimated"]) {
                 console.warn("spv not full synced");
-                sendAlarm("btc maker spv not full synced");
+                sendAlarm("[btc maker] spv not full synced");
                 continue;
             }
 
@@ -190,11 +193,11 @@ async function acceptOfferIfAny(orderId) {
             });
 
             if (spvHtlc["error"] != null) {
-                sendAlarm("btc maker spv_createhtlc failed");
+                sendAlarm("[btc maker] spv_createhtlc failed");
                 continue;
             }
 
-            console.log("spv_createhtlc result: " + JSON.stringify(spvHtlc.result));
+            sendAlarm("[btc maker] spv_createhtlc result: " + JSON.stringify(spvHtlc.result));
             
             const seed = spvHtlc.result["seed"];
             const hash = spvHtlc.result["seedhash"];
@@ -210,33 +213,31 @@ async function acceptOfferIfAny(orderId) {
             // const spvFundTxid = (await rpcMethod('spv_sendtoaddress', [spvHtlc.result["address"], offerDetails["amountInFromAsset"]])).result;
 
             if (spvFundRpy["error"] != null) {
-                sendAlarm("btc maker spv_sendtoaddress failed");
+                sendAlarm("[btc maker] spv_sendtoaddress failed");
                 continue;
             }
 
             const spvFundTxid = spvFundRpy.result;
 
             if (spvFundTxid["txid"] == null) {
-                sendAlarm("btc maker spv_sendtoaddress returns null");
+                sendAlarm("[btc maker] spv_sendtoaddress returns null");
                 continue;
             }
-
-            const syncStatus = ["result"]["current"];
 
             objSpvHtlcExpire[spvHtlc.result["address"]] = btcBlock + SPV_TIMEOUT + 2;
             Deno.writeTextFileSync("./spvhtlcexpire.json", JSON.stringify(objSpvHtlcExpire));
 
-            console.log(`Fund spv htlc ${spvHtlc.result["address"]} with txid result: ${spvFundTxid["txid"]}`);
+            sendAlarm(`[btc maker] Fund spv htlc ${spvHtlc.result["address"]} with txid result: ${spvFundTxid["txid"]}`);
 
             const extHtlcTxid = await waitConfirmation(await rpcMethod('icx_submitexthtlc',
                 [{"offerTx": key, "hash": hash, "amount": offerDetails["amountInFromAsset"],
                 "htlcScriptAddress": spvHtlc.result["address"], "ownerPubkey": btcMakerPubkey, "timeout": SPV_TIMEOUT}]), 0, true);
 
             if (extHtlcTxid["error"] != null) {
-                sendAlarm("btc maker icx_submitexthtlc failed");
+                sendAlarm("[btc maker] icx_submitexthtlc failed");
                 continue;
             }
-            console.log(`icx_submitexthtlc txid: ${extHtlcTxid}`);
+            sendAlarm(`[btc maker] icx_submitexthtlc txid: ${extHtlcTxid}`);
             let offerData = {"seed": seed, "hash": hash, "exthtlc": extHtlcTxid, "timeout": SPV_TIMEOUT, "amount": offerDetails["amountInFromAsset"] };
             mapOfferData.set(key, offerData);
         }
@@ -267,8 +268,9 @@ async function checkOfferDfcHtlc(offerData, offerId) {
             }
 
             const dfcClaimTxid = dfcClaimRes.result;
-            console.log("Claimed dBTC in txid: " + JSON.stringify(dfcClaimTxid));
+            sendAlarm("[btc maker] Claimed dBTC in txid: " + JSON.stringify(dfcClaimTxid));
             mapOfferDfcClaim.set(offerId, dfcClaimTxid.txid);
+            sendAlarm(`[btc maker] Finished the whole swap process for offer: ${offerId}`);
         }
     }
 }
@@ -299,13 +301,13 @@ async function claimExpiredSpvHtlc() {
     const res = (await rpcMethod('spv_syncstatus'));
     if (res["result"] == null || !res["result"]["connected"]) {
         console.warn("spv not connected");
-        sendAlarm("btc maker spv not connected");
+        sendAlarm("[btc maker] spv not connected");
         return;
     }
 
     if (res["result"]["current"] != res["result"]["estimated"]) {
         console.warn("spv not full synced");
-        sendAlarm("btc maker spv not full synced");
+        sendAlarm("[btc maker] spv not full synced");
         return;
     }
     const btcBlock = res["result"]["current"];
