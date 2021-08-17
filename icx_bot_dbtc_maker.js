@@ -18,6 +18,8 @@ const checkOrderSizeInterval = 1; // every hour check order size
 let checkOrderSizeTime = new Date("2021-01-01"); // Set to an old time so when restart the script will check first.
 
 async function sendAlarm(msg) {
+    console.log(msg);
+
     if (alarmHook == null)
         return;
 
@@ -75,7 +77,7 @@ async function createOrderIfNotExist() {
                             if (!hasOffer) {
                                 console.log(`Order ${key} size ${orderDetails["amountToFill"]} not match with the btc balance, close it and recreate new one`);
                                 const closeTxid = await waitConfirmation(await rpcMethod('icx_closeorder', [key]), 0, true);
-                                console.log(`Order ${key} is closed in tx ${closeTxid}`);
+                                sendAlarm(`[dbtc maker] Order ${key} is closed in tx ${closeTxid}`);
                                 continue;
                             }
                         }
@@ -85,7 +87,7 @@ async function createOrderIfNotExist() {
                 }else {
                     console.log(`Order ${key} is too old, close it`);
                     const closeTxid = (await waitConfirmation(await rpcMethod('icx_closeorder', [key]), 0, true));
-                    console.log(`Order ${key} is closed in tx ${closeTxid}`);
+                    sendAlarm(`[dbtc maker] Order ${key} is closed in tx ${closeTxid}`);
                 }
             }
         }
@@ -110,11 +112,11 @@ async function createOrderIfNotExist() {
               "expiry": orderTimeout}]),
               0, true);
         if (orderTxId["error"] != null) {
-            sendAlarm("dbtc maker icx_createorder failed");
+            sendAlarm("[dbtc maker] icx_createorder failed");
             Deno.exit();
         }
         checkOrderSizeTime = time().now();
-        console.log("created order " + orderTxId);
+        sendAlarm("[dbtc maker] created order " + orderTxId);
         return orderTxId;
     }
 }
@@ -188,12 +190,14 @@ async function acceptOfferIfAny(orderId) {
                 [{ "offerTx": key, "hash": hash, "amount": offerDetails["amount"], "timeout": timeout }]), 0, true);
 
             if (dfcHtlcTxid["error"] != null) {
-                sendAlarm("dbtc maker icx_submitdfchtlc failed");
+                sendAlarm("[dbtc maker] icx_submitdfchtlc failed");
                 continue;
             }
 
             let offerData = {"seed": seed, "hash": hash, "dfchtlc": dfcHtlcTxid, "timeout": timeout, "amount": offerDetails["amount"] };
             mapOfferData.set(key, offerData);
+
+            sendAlarm(`[dbtc maker] accepted offer by call icx_submitdfchtlc with txid: ${dfcHtlcTxid}", amount: ${offerDetails["amount"]}`);
         }
     }
 }
@@ -226,14 +230,15 @@ async function checkOfferSpvHtlc(offerData, offerId) {
             });
 
             if (spvHtlc["error"] != null) {
-                sendAlarm("dbtc maker spv_createhtlc failed");
+                sendAlarm("[dbtc maker] spv_createhtlc failed");
                 continue;
             }
 
             objOfferSpvHtlc[offerId] = spvHtlc.result["address"];
 
             Deno.writeTextFileSync("./offerspvhtlc.json", JSON.stringify(objOfferSpvHtlc));
-            console.log("spv_createhtlc address result: " + objOfferSpvHtlc[offerId]);
+
+            sendAlarm("[dbtc maker] spv_createhtlc address result: " + objOfferSpvHtlc[offerId]);
         }
     }
 }
@@ -252,14 +257,15 @@ async function checkHtlcOutputAndClaim(offerId) {
     console.log("listSpvReceived.length: " + Object.keys(listSpvReceived).length);
     if (Object.keys(listSpvReceived).length > 0) {
         if (!mapOfferData.has(offerId)) {
-            console.error("Offer " + offerId + " don't have htlc data");
+            const msg = `[dbtc maker] offer ${offerId} don't have htlc data`;
+            sendAlarm(msg);
+            console.error(msg);
             return;
         }
 
         const offerData = mapOfferData.get(offerId);
         if (listSpvReceived[0]["amount"] != offerData["amount"]) {
-            console.error("The spv received amount not match with offer amount!");
-            return;
+            sendAlarm(`[dbtc maker] The spv received amount ${listSpvReceived[0]["amount"]} not match with offer amount ${offerData["amount"]}!`);
         }
 
         const claimInput = [spvHtlc, btcReceiveAddress, offerData["seed"]];
@@ -269,12 +275,15 @@ async function checkHtlcOutputAndClaim(offerId) {
         });
 
         if (claimBtcTxid["error"] != null) {
-            sendAlarm("dbtc maker spv_createhtlc failed");
+            sendAlarm("[dbtc maker] spv_claimhtlc failed");
             return;
         }
 
-        console.log("SPV claim txid: " + claimBtcTxid.result["txid"]);
+        sendAlarm(`[dbtc maker] SPV claim txid: ${ claimBtcTxid.result["txid"]}`);
+
         mapOfferSpvClaim.set(offerId, claimBtcTxid.result["txid"]);
+
+        sendAlarm(`[dbtc maker] Finished the whole swap process for offer: ${offerId}`);
 
         // Erase the offer spv htlc, so don't check again.
         delete objOfferSpvHtlc[offerId];
