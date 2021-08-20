@@ -77,7 +77,7 @@ async function createOrderIfNotExist() {
                             if (!hasOffer) {
                                 console.log(`Order ${key} size ${orderDetails["amountToFill"]} not match with the btc balance, close it and recreate new one`);
                                 const closeTxid = await waitConfirmation(await rpcMethod('icx_closeorder', [key]), 0, true);
-                                sendAlarm(`[dbtc maker] Order ${key} is closed in tx ${closeTxid}`);
+                                sendAlarm(`[dbtc maker] Order ${key} is closed in tx ${JSON.stringify(closeTxid)}`);
                                 continue;
                             }
                         }
@@ -87,7 +87,7 @@ async function createOrderIfNotExist() {
                 }else {
                     console.log(`Order ${key} is too old, close it`);
                     const closeTxid = (await waitConfirmation(await rpcMethod('icx_closeorder', [key]), 0, true));
-                    sendAlarm(`[dbtc maker] Order ${key} is closed in tx ${closeTxid}`);
+                    sendAlarm(`[dbtc maker] Order ${key} is closed in tx ${JSON.stringify(closeTxid)}`);
                 }
             }
         }
@@ -197,7 +197,7 @@ async function acceptOfferIfAny(orderId) {
             let offerData = {"seed": seed, "hash": hash, "dfchtlc": dfcHtlcTxid, "timeout": timeout, "amount": offerDetails["amount"] };
             mapOfferData.set(key, offerData);
 
-            sendAlarm(`[dbtc maker] accepted offer by call icx_submitdfchtlc with txid: ${dfcHtlcTxid}", amount: ${offerDetails["amount"]}`);
+            sendAlarm(`[dbtc maker] accepted offer by call icx_submitdfchtlc with txid: ${dfcHtlcTxid}, amount: ${offerDetails["amount"]}`);
         }
     }
 }
@@ -279,7 +279,7 @@ async function checkHtlcOutputAndClaim(offerId) {
             return;
         }
 
-        sendAlarm(`[dbtc maker] SPV claim txid: ${ claimBtcTxid.result["txid"]}`);
+        sendAlarm(`[dbtc maker] SPV claim txid: ${claimBtcTxid.result["txid"]}`);
 
         mapOfferSpvClaim.set(offerId, claimBtcTxid.result["txid"]);
 
