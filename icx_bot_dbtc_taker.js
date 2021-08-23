@@ -24,7 +24,7 @@ const offerAmount = 0.0001;
             if (key == "WARNING")
                 continue;
 
-            if (key != "2797cb1702c1178c3a73b34c4eea26edcc3fa509f6d2a7beeccb33b02ef41a9f")
+            if (key != "55a4fe97426d3974c9cd78460977e4c46ab5e1611bedfae7b64cd88096ec9ea8")
                 continue;
 
             if (orders.hasOwnProperty(key)) {

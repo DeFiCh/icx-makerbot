@@ -92,7 +92,7 @@ async function createOrderIfNotExist() {
                         foundOrder = true;
                         foundedOrder = key;
                     } else {
-                        sendAlarm(`Order ${key} is too old, close it`);
+                        sendAlarm(`[dbtc maker] Order ${key} is too old, close it`);
                         const closeTxid = (await waitConfirmation(await rpcMethod('icx_closeorder', [key]), 0, true));
                         sendAlarm(`[dbtc maker] Order ${key} is closed in tx ${JSON.stringify(closeTxid)}`);
                     }
