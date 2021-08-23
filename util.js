@@ -9,6 +9,8 @@ const rpcPort = Deno.env.get("RPC_PORT");
 const rpcUser = Deno.env.get("RPC_USER");
 const rpcPassword = Deno.env.get("RPC_PASSWORD");
 
+export const BOT_VERSION = "1.0.1";
+
 export function sleep(ms) {
 	return new Promise((resolve) => setTimeout(resolve, ms));
 }

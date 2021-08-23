@@ -1,4 +1,4 @@
-import { rpcMethod, waitConfirmation, waitSPVConnected, createSeedHashPair, sleep } from './util.js';
+import { rpcMethod, waitConfirmation, waitSPVConnected, createSeedHashPair, sleep, BOT_VERSION } from './util.js';
 import { difference } from "https://deno.land/std@0.103.0/datetime/mod.ts";
 import { time } from "https://deno.land/x/time.ts@v2.0.1/mod.ts";
 
@@ -34,8 +34,8 @@ async function sendAlarm(msg) {
 
 async function createOrderIfNotExist() {
     const orders = (await rpcMethod('icx_listorders')).result;
-    //console.log(orders)
     var foundOrder = false;
+    var foundedOrder = "";
     const accountBalance = (await rpcMethod('getaccount', [ownerAddress])).result;
     var btcBalance = 0;
     console.log("Account balance " + accountBalance);
@@ -46,6 +46,9 @@ async function createOrderIfNotExist() {
         }
     })
     console.log("BTC balance " + btcBalance);
+
+    const chainInfo = (await rpcMethod('getblockchaininfo')).result;
+    const headerBlock = chainInfo["headers"];
 
     for (var key in orders) {
         if (key == "WARNING")
@@ -58,42 +61,49 @@ async function createOrderIfNotExist() {
                 orderDetails["tokenFrom"] == "BTC" &&
                 orderDetails["chainTo"] == "BTC")
             {
-                const chainInfo = (await rpcMethod('getblockchaininfo')).result;
-                const headerBlock = chainInfo["headers"];
                 console.log(`Order ${key} expiration height ${orderDetails["expireHeight"]}, blockchain header block ${headerBlock}`);
-                if (orderDetails["expireHeight"] > headerBlock + minOrderLife) {
-                    const timeDiffInHours = difference(time().now(), checkOrderSizeTime, { units: ["hours"]})["hours"];
-                    if (timeDiffInHours > checkOrderSizeInterval) {
-                        if (Math.abs(orderDetails["amountToFill"] - btcBalance) > 0.00001) {
-                            const listOrderOffers = (await rpcMethod('icx_listorders', [{ "orderTx": key }])).result;
-                            
-                            let hasOffer = false;
-                            for (var offerKey in listOrderOffers) {
-                                if (offerKey == "WARNING")
+                if (foundOrder) {
+                    sendAlarm(`[dbtc maker] Already have order ${foundedOrder}, close extra order ${key}`);
+                    const closeTxid = await waitConfirmation(await rpcMethod('icx_closeorder', [key]), 0, true);
+                    sendAlarm(`[dbtc maker] Order ${key} is closed in tx ${JSON.stringify(closeTxid)}`);
+                } else {
+                    if (orderDetails["expireHeight"] > headerBlock + minOrderLife) {
+                        const timeDiffInHours = difference(time().now(), checkOrderSizeTime, { units: ["hours"] })["hours"];
+                        if (timeDiffInHours > checkOrderSizeInterval) {
+                            if (Math.abs(orderDetails["amountToFill"] - btcBalance) > 0.00001) {
+                                const listOrderOffers = (await rpcMethod('icx_listorders', [{ "orderTx": key }])).result;
+
+                                let hasOffer = false;
+                                for (var offerKey in listOrderOffers) {
+                                    if (offerKey == "WARNING")
+                                        continue;
+                                    hasOffer = true;
+                                }
+                                // If the order size not match with balance and it don't have offer now, then close the order and recreate a new order.
+                                if (!hasOffer) {
+                                    sendAlarm(`[dbtc maker] Order ${key} size ${orderDetails["amountToFill"]} not match with the btc balance, close it and recreate new one`);
+                                    const closeTxid = await waitConfirmation(await rpcMethod('icx_closeorder', [key]), 0, true);
+                                    sendAlarm(`[dbtc maker] Order ${key} is closed in tx ${JSON.stringify(closeTxid)}`);
                                     continue;
-                                hasOffer = true;
-                            }
-                            // If the order size not match with balance and it don't have offer now, then close the order and recreate a new order.
-                            if (!hasOffer) {
-                                console.log(`Order ${key} size ${orderDetails["amountToFill"]} not match with the btc balance, close it and recreate new one`);
-                                const closeTxid = await waitConfirmation(await rpcMethod('icx_closeorder', [key]), 0, true);
-                                sendAlarm(`[dbtc maker] Order ${key} is closed in tx ${JSON.stringify(closeTxid)}`);
-                                continue;
+                                }
                             }
                         }
+                        console.log("Found order " + key);
+                        foundOrder = true;
+                        foundedOrder = key;
+                    } else {
+                        sendAlarm(`Order ${key} is too old, close it`);
+                        const closeTxid = (await waitConfirmation(await rpcMethod('icx_closeorder', [key]), 0, true));
+                        sendAlarm(`[dbtc maker] Order ${key} is closed in tx ${JSON.stringify(closeTxid)}`);
                     }
-                    console.log("Found order " + key);
-                    return key;
-                }else {
-                    console.log(`Order ${key} is too old, close it`);
-                    const closeTxid = (await waitConfirmation(await rpcMethod('icx_closeorder', [key]), 0, true));
-                    sendAlarm(`[dbtc maker] Order ${key} is closed in tx ${JSON.stringify(closeTxid)}`);
                 }
             }
         }
     }
 
-    if (!foundOrder) {
+    if (foundOrder) {
+        return foundedOrder;
+    } else {
         if (btcBalance <= 0.0001) {
             console.error("dBTC balance too low");
             return;
@@ -324,6 +334,8 @@ async function loadExistingData() {
             console.error("Please define SPV_BTC_ADDRESS in environment variable");
             return;
         }
+
+        sendAlarm(`[dbtc maker] started bot with version ${BOT_VERSION}`);
         
         loadExistingData();
 
