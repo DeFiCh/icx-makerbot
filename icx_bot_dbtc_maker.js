@@ -17,6 +17,11 @@ let objHashSeed = new Object();
 const checkOrderSizeInterval = 1; // every hour check order size
 let checkOrderSizeTime = new Date("2021-01-01"); // Set to an old time so when restart the script will check first.
 
+let objStatistics = new Object();
+
+const outputStatisticsInterval = 6; // very 6 hours output statistics
+let outputStatisticsTime = new Date("2021-01-01"); // Set to an old time so when restart the script will output first.
+
 async function sendAlarm(msg) {
     console.log(msg);
 
@@ -33,6 +38,13 @@ async function sendAlarm(msg) {
 }
 
 async function createOrderIfNotExist() {
+    const res = (await rpcMethod('getblockchaininfo'));
+    if (res["result"] == null || res["result"]["headers"] == null) {
+        sendAlarm("[dbtc maker] Failed to getblockchaininfo");
+        return;
+    }
+    const headerBlock = res["result"]["headers"];
+
     const orders = (await rpcMethod('icx_listorders')).result;
     var foundOrder = false;
     var foundedOrder = "";
@@ -44,11 +56,8 @@ async function createOrderIfNotExist() {
             btcBalance = parseFloat(item);
             return;
         }
-    })
+    });
     console.log("BTC balance " + btcBalance);
-
-    const chainInfo = (await rpcMethod('getblockchaininfo')).result;
-    const headerBlock = chainInfo["headers"];
 
     for (var key in orders) {
         if (key == "WARNING")
@@ -123,10 +132,14 @@ async function createOrderIfNotExist() {
               0, true);
         if (orderTxId["error"] != null) {
             sendAlarm("[dbtc maker] icx_createorder failed");
-            Deno.exit();
+            return;
         }
+
         checkOrderSizeTime = time().now();
-        sendAlarm("[dbtc maker] created order " + orderTxId);
+        objStatistics["dbtcInOrder"] = orderSize;
+        Deno.writeTextFileSync("./dbtcmakerstatistics.json", JSON.stringify(objStatistics));
+
+        sendAlarm(`[dbtc maker] created order ${orderTxId}, dbtc in order: ${orderSize}`);
         return orderTxId;
     }
 }
@@ -197,12 +210,15 @@ async function acceptOfferIfAny(orderId) {
 
             const timeout = 1500; // Must grater than 1439, because CICXSubmitDFCHTLC::MINIMUM_TIMEOUT limit.
             const dfcHtlcTxid = await waitConfirmation(await rpcMethod('icx_submitdfchtlc',
-                [{ "offerTx": key, "hash": hash, "amount": offerDetails["amount"], "timeout": timeout }]), 0, true);
+                [{"offerTx": key, "hash": hash, "amount": offerDetails["amount"], "timeout": timeout }]), 0, true);
 
             if (dfcHtlcTxid["error"] != null) {
                 sendAlarm("[dbtc maker] icx_submitdfchtlc failed");
                 continue;
             }
+
+            objStatistics["dbtcInHtlc"] += offerDetails["amount"];
+            Deno.writeTextFileSync("./dbtcmakerstatistics.json", JSON.stringify(objStatistics));
 
             let offerData = {"seed": seed, "hash": hash, "dfchtlc": dfcHtlcTxid, "timeout": timeout, "amount": offerDetails["amount"] };
             mapOfferData.set(key, offerData);
@@ -321,6 +337,45 @@ async function loadExistingData() {
     }catch (e) {
         console.log("Skipped to load offerspvhtlc.json");
     }
+
+    try {
+        const textStatistics = Deno.readTextFileSync("./dbtcmakerstatistics.json");
+        if (textStatistics.length > 0) {
+            objStatistics = JSON.parse(textStatistics);
+            console.log("objStatistics: " + JSON.stringify(objStatistics));
+        }
+    } catch (e) {
+        console.log("Skipped to load dbtcmakerstatistics.json");
+    }
+}
+
+async function outputStatistics() {
+    const timeDiffInHours = difference(time().now(), outputStatisticsTime, { units: ["hours"] })["hours"];
+    if (timeDiffInHours < outputStatisticsInterval) {
+        return;
+    }
+
+    outputStatisticsTime = time().now();
+
+    const accountBalance = (await rpcMethod('getaccount', [ownerAddress])).result;
+    var dbtcBalance = 0, dfiTokenBalance = 0;
+    console.log("Account balance " + accountBalance);
+    accountBalance.forEach((item) => {
+        if (item.includes("@BTC")) {
+            dbtcBalance = parseFloat(item);
+        }else if (item.includes("@DFI")) {
+            dfiTokenBalance = parseFloat(item);
+        }
+    });
+
+    const dfiUtxoBalance = (await rpcMethod('getbalance')).result;
+    const btcBalance = parseFloat((await rpcMethod('spv_getbalance', [])).result);
+    var dbtcInHtlc = 0;
+    if (objStatistics["dbtcInHtlc"] != null) {
+        dbtcInHtlc = objStatistics["dbtcInHtlc"];
+    }
+
+    sendAlarm(`[dbtc maker] Order size: ${objStatistics["dbtcInOrder"]}, BTC balance: ${btcBalance}, dBTC balance: ${dbtcBalance}, DFI Token balance: ${dfiTokenBalance}, DFI UTXO balance: ${dfiUtxoBalance}, Total dbtc amount in HTLC: ${dbtcInHtlc}`);
 }
 
 (async() => {
@@ -356,6 +411,8 @@ async function loadExistingData() {
             for (var offerId in objOfferSpvHtlc) {
                 await checkHtlcOutputAndClaim(offerId);
             }
+
+            await outputStatistics();
 
             await sleep(20000);
         }
