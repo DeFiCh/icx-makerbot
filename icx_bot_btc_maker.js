@@ -13,9 +13,15 @@ let mapOfferData = new Map();
 let mapOfferDfcClaim = new Map();
 let objHashSeed = new Object();
 let objSpvHtlcExpire = new Object();
+let objSpvHtlcAmount = new Object();
+
+let objStatistics = new Object();
 
 const checkOrderSizeInterval = 1; // every hour check order size
 let checkOrderSizeTime = new Date("2021-01-01"); // Set to an old time so when restart the script will check first.
+
+const outputStatisticsInterval = 6; // very 6 hours output statistics
+let outputStatisticsTime = new Date("2021-01-01"); // Set to an old time so when restart the script will output first.
 
 async function sendAlarm(msg) {
     console.log(msg);
@@ -33,14 +39,18 @@ async function sendAlarm(msg) {
 }
 
 async function createOrderIfNotExist() {
+    const res = (await rpcMethod('getblockchaininfo'));
+    if (res["result"] == null || res["result"]["headers"] == null) {
+        sendAlarm("[btc maker] Failed to getblockchaininfo");
+        return;
+    }
+    const headerBlock = res["result"]["headers"];
+
     const orders = (await rpcMethod('icx_listorders')).result;
     var foundOrder = false;
     var foundedOrder = "";
     const btcBalance = parseFloat((await rpcMethod('spv_getbalance', [])).result);
     console.log("BTC balance " + btcBalance);
-
-    const chainInfo = (await rpcMethod('getblockchaininfo')).result;
-    const headerBlock = chainInfo["headers"];
 
     for (var key in orders) {
         if (key == "WARNING")
@@ -55,7 +65,7 @@ async function createOrderIfNotExist() {
             {
                 console.log(`Order ${key} expiration height ${orderDetails["expireHeight"]}, blockchain header block ${headerBlock}`);
                 if (foundOrder) {
-                    sendAlarm(`Already have order ${foundedOrder}, close extra order ${key}`);
+                    sendAlarm(`[btc maker] Already have order ${foundedOrder}, close extra order ${key}`);
                     const closeTxid = await waitConfirmation(await rpcMethod('icx_closeorder', [key]), 0, true);
                     sendAlarm(`[btc maker] Order ${key} is closed in tx ${JSON.stringify(closeTxid)}`);
 
@@ -114,10 +124,13 @@ async function createOrderIfNotExist() {
               "expiry": orderTimeout}]), 0, true);
         if (orderTxId["error"] != null) {
             sendAlarm("[btc maker] icx_createorder failed");
-            Deno.exit();
+            return;
         }
         checkOrderSizeTime = time().now();
-        sendAlarm("[btc maker] created order " + orderTxId);
+        objStatistics["btcInOrder"] = orderSize;
+        Deno.writeTextFileSync("./btcmakerstatistics.json", JSON.stringify(objStatistics));
+
+        sendAlarm(`[btc maker] created order ${orderTxId}, btc in order: ${orderSize}`);
         return orderTxId;
     }
 }
@@ -235,8 +248,14 @@ async function acceptOfferIfAny(orderId) {
                 continue;
             }
 
+            objStatistics["btcInHtlc"] += offerDetails["amountInFromAsset"];
+            Deno.writeTextFileSync("./btcmakerstatistics.json", JSON.stringify(objStatistics));
+
             objSpvHtlcExpire[spvHtlc.result["address"]] = btcBlock + SPV_TIMEOUT + 2;
             Deno.writeTextFileSync("./spvhtlcexpire.json", JSON.stringify(objSpvHtlcExpire));
+
+            objSpvHtlcAmount[spvHtlc.result["address"]] = offerDetails["amountInFromAsset"];
+            Deno.writeTextFileSync("./spvhtlcamount.json", JSON.stringify(objSpvHtlcAmount));
 
             sendAlarm(`[btc maker] Fund spv htlc ${spvHtlc.result["address"]} with txid result: ${spvFundTxid["txid"]}`);
 
@@ -306,6 +325,26 @@ async function loadExistingData() {
     } catch (e) {
         console.log("Skipped to load spvhtlcexpire.json");
     }
+
+    try {
+        const textspvHtlAmount = Deno.readTextFileSync("./spvhtlcamount.json");
+        if (textspvHtlAmount.length > 0) {
+            objSpvHtlcAmount = JSON.parse(textspvHtlAmount);
+            console.log("objSpvHtlcAmount: " + JSON.stringify(objSpvHtlcAmount));
+        }
+    } catch (e) {
+        console.log("Skipped to load spvhtlcamount.json");
+    }
+
+    try {
+        const textStatistics = Deno.readTextFileSync("./btcmakerstatistics.json");
+        if (textStatistics.length > 0) {
+            objStatistics = JSON.parse(textStatistics);
+            console.log("objStatistics: " + JSON.stringify(objStatistics));
+        }
+    } catch (e) {
+        console.log("Skipped to load btcmakerstatistics.json");
+    }
 }
 
 async function claimExpiredSpvHtlc() {
@@ -333,8 +372,10 @@ async function claimExpiredSpvHtlc() {
             if (res["error"] != null) {
                 console.log(`SPV HTLC ${spvHtlc} already claimed`);
             }else if (res["result"] != null && res["result"]["txid"]) {
-                console.log(`Successfully claimed back btc in SPV HTLC ${spvHtlc} in txid ${res["result"]["txid"]}`);
+                sendAlarm(`Successfully claimed back btc in SPV HTLC ${spvHtlc} in txid ${res["result"]["txid"]}`);
             }
+            objStatistics["btcInHtlc"] -= objSpvHtlcAmount[spvHtlc];
+            Deno.writeTextFileSync("./btcmakerstatistics.json", JSON.stringify(objStatistics));
         }
     }
 
@@ -355,6 +396,35 @@ async function claimExpiredSpvHtlc() {
             Deno.removeSync("./spvhtlcexpire.json");
         }
     }
+}
+
+async function outputStatistics() {
+    const timeDiffInHours = difference(time().now(), outputStatisticsTime, { units: ["hours"] })["hours"];
+    if (timeDiffInHours < outputStatisticsInterval) {
+        return;
+    }
+
+    outputStatisticsTime = time().now();
+
+    const accountBalance = (await rpcMethod('getaccount', [ownerAddress])).result;
+    var dbtcBalance = 0, dfiTokenBalance = 0;
+    console.log("Account balance " + accountBalance);
+    accountBalance.forEach((item) => {
+        if (item.includes("@BTC")) {
+            dbtcBalance = parseFloat(item);
+        }else if (item.includes("@DFI")) {
+            dfiTokenBalance = parseFloat(item);
+        }
+    });
+
+    const dfiUtxoBalance = (await rpcMethod('getbalance')).result;
+    const btcBalance = parseFloat((await rpcMethod('spv_getbalance', [])).result);
+    var btcInHtlc = 0;
+    if (objStatistics["btcInHtlc"] != null) {
+        btcInHtlc = objStatistics["btcInHtlc"];
+    }
+
+    sendAlarm(`[btc maker] Order size: ${objStatistics["btcInOrder"]}, BTC balance: ${btcBalance}, dBTC balance: ${dbtcBalance}, DFI Token balance: ${dfiTokenBalance}, DFI UTXO balance: ${dfiUtxoBalance}, Total btc amount in HTLC: ${btcInHtlc}`);
 }
 
 (async() => {
@@ -387,7 +457,9 @@ async function claimExpiredSpvHtlc() {
             
             await mapOfferData.forEach(checkOfferDfcHtlc);
 
-            claimExpiredSpvHtlc();
+            await claimExpiredSpvHtlc();
+
+            await outputStatistics();
 
             await sleep(20000);
         }
