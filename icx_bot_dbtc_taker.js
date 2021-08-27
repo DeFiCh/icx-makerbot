@@ -53,7 +53,7 @@ const offerAmount = 0.0001;
 
         console.log("Start to make offer");
         const offerTxId = await waitConfirmation(await rpcMethod('icx_makeoffer',
-            [{"orderTx": orderId, "amount": offerAmount, "ownerAddress": ownerAddress, "expiry":300}]));
+            [{"orderTx": orderId, "amount": offerAmount, "ownerAddress": ownerAddress, "expiry": 300}]));
         console.log("made offer " + offerTxId + " to order " + orderId);
 
         // const offerTxId = "20e6248ed91ea316c2626d45a6aad9e512aa2edc04c9405d40ac2d85055e9839";

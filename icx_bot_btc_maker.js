@@ -68,7 +68,6 @@ async function createOrderIfNotExist() {
                     sendAlarm(`[btc maker] Already have order ${foundedOrder}, close extra order ${key}`);
                     const closeTxid = await waitConfirmation(await rpcMethod('icx_closeorder', [key]), 0, true);
                     sendAlarm(`[btc maker] Order ${key} is closed in tx ${JSON.stringify(closeTxid)}`);
-
                 } else {
                     if (orderDetails["expireHeight"] > headerBlock + minOrderLife) {
                         const timeDiffInHours = difference(time().now(), checkOrderSizeTime, { units: ["hours"] })["hours"];
@@ -372,7 +371,7 @@ async function claimExpiredSpvHtlc() {
             if (res["error"] != null) {
                 console.log(`SPV HTLC ${spvHtlc} already claimed`);
             }else if (res["result"] != null && res["result"]["txid"]) {
-                sendAlarm(`Successfully claimed back btc in SPV HTLC ${spvHtlc} in txid ${res["result"]["txid"]}`);
+                sendAlarm(`[btc maker] Successfully claimed back btc in SPV HTLC ${spvHtlc} in txid ${res["result"]["txid"]}`);
             }
             objStatistics["btcInHtlc"] -= objSpvHtlcAmount[spvHtlc];
             Deno.writeTextFileSync("./btcmakerstatistics.json", JSON.stringify(objStatistics));

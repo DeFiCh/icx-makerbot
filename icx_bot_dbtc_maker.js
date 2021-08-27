@@ -22,6 +22,9 @@ let objStatistics = new Object();
 const outputStatisticsInterval = 6; // very 6 hours output statistics
 let outputStatisticsTime = new Date("2021-01-01"); // Set to an old time so when restart the script will output first.
 
+let objOrderHtlcExpire = new Object();
+let headerBlock = 0;
+
 async function sendAlarm(msg) {
     console.log(msg);
 
@@ -37,13 +40,30 @@ async function sendAlarm(msg) {
     });
 }
 
+async function canDeleteOrder(orderId) {
+    if (Object.keys(objOrderHtlcExpire).length > 0 && Object.keys(objOrderHtlcExpire[orderId]).length > 0) {
+        return false;
+    }
+
+    const listOrderOffers = (await rpcMethod('icx_listorders', [{ "orderTx": orderId }])).result;
+
+    for (var offerKey in listOrderOffers) {
+        if (offerKey == "WARNING")
+            continue;
+        return false; // Has offer, cannot delete order
+    }
+
+    return true;
+}
+
 async function createOrderIfNotExist() {
     const res = (await rpcMethod('getblockchaininfo'));
     if (res["result"] == null || res["result"]["headers"] == null) {
         sendAlarm("[dbtc maker] Failed to getblockchaininfo");
         return;
     }
-    const headerBlock = res["result"]["headers"];
+
+    headerBlock = res["result"]["headers"];
 
     const orders = (await rpcMethod('icx_listorders')).result;
     var foundOrder = false;
@@ -80,16 +100,9 @@ async function createOrderIfNotExist() {
                         const timeDiffInHours = difference(time().now(), checkOrderSizeTime, { units: ["hours"] })["hours"];
                         if (timeDiffInHours > checkOrderSizeInterval) {
                             if (Math.abs(orderDetails["amountToFill"] - btcBalance) > 0.00001) {
-                                const listOrderOffers = (await rpcMethod('icx_listorders', [{ "orderTx": key }])).result;
-
-                                let hasOffer = false;
-                                for (var offerKey in listOrderOffers) {
-                                    if (offerKey == "WARNING")
-                                        continue;
-                                    hasOffer = true;
-                                }
+                                const canDel = await canDeleteOrder(key);
                                 // If the order size not match with balance and it don't have offer now, then close the order and recreate a new order.
-                                if (!hasOffer) {
+                                if (canDel) {
                                     sendAlarm(`[dbtc maker] Order ${key} size ${orderDetails["amountToFill"]} not match with the btc balance, close it and recreate new one`);
                                     const closeTxid = await waitConfirmation(await rpcMethod('icx_closeorder', [key]), 0, true);
                                     sendAlarm(`[dbtc maker] Order ${key} is closed in tx ${JSON.stringify(closeTxid)}`);
@@ -138,6 +151,9 @@ async function createOrderIfNotExist() {
         checkOrderSizeTime = time().now();
         objStatistics["dbtcInOrder"] = orderSize;
         Deno.writeTextFileSync("./dbtcmakerstatistics.json", JSON.stringify(objStatistics));
+
+        objOrderHtlcExpire[orderTxId] = new Object();
+        Deno.writeTextFileSync("./orderhtlcexpire.json", JSON.stringify(objOrderHtlcExpire));
 
         sendAlarm(`[dbtc maker] created order ${orderTxId}, dbtc in order: ${orderSize}`);
         return orderTxId;
@@ -208,9 +224,9 @@ async function acceptOfferIfAny(orderId) {
             objHashSeed[hash] = seed;
             Deno.writeTextFileSync("./hashseed.json", JSON.stringify(objHashSeed));
 
-            const timeout = 1500; // Must grater than 1439, because CICXSubmitDFCHTLC::MINIMUM_TIMEOUT limit.
+            const TIMEOUT = 1500; // Must grater than 1439, because CICXSubmitDFCHTLC::MINIMUM_TIMEOUT limit.
             const dfcHtlcTxid = await waitConfirmation(await rpcMethod('icx_submitdfchtlc',
-                [{"offerTx": key, "hash": hash, "amount": offerDetails["amount"], "timeout": timeout }]), 0, true);
+                [{"offerTx": key, "hash": hash, "amount": offerDetails["amount"], "timeout": TIMEOUT }]), 0, true);
 
             if (dfcHtlcTxid["error"] != null) {
                 sendAlarm("[dbtc maker] icx_submitdfchtlc failed");
@@ -220,10 +236,13 @@ async function acceptOfferIfAny(orderId) {
             objStatistics["dbtcInHtlc"] += offerDetails["amount"];
             Deno.writeTextFileSync("./dbtcmakerstatistics.json", JSON.stringify(objStatistics));
 
-            let offerData = {"seed": seed, "hash": hash, "dfchtlc": dfcHtlcTxid, "timeout": timeout, "amount": offerDetails["amount"] };
+            let offerData = {"seed": seed, "hash": hash, "dfchtlc": dfcHtlcTxid, "timeout": TIMEOUT, "amount": offerDetails["amount"], "orderid" : orderId };
             mapOfferData.set(key, offerData);
 
-            sendAlarm(`[dbtc maker] accepted offer by call icx_submitdfchtlc with txid: ${dfcHtlcTxid}, amount: ${offerDetails["amount"]}`);
+            objOrderHtlcExpire[orderId][dfcHtlcTxid] = headerBlock + TIMEOUT;
+            Deno.writeTextFileSync("./orderhtlcexpire.json", JSON.stringify(objOrderHtlcExpire));
+
+            sendAlarm(`[dbtc maker] accepted offer ${key} by call icx_submitdfchtlc with txid: ${dfcHtlcTxid}, amount: ${offerDetails["amount"]}`);
         }
     }
 }
@@ -311,6 +330,11 @@ async function checkHtlcOutputAndClaim(offerId) {
 
         sendAlarm(`[dbtc maker] Finished the whole swap process for offer: ${offerId}`);
 
+        const orderId = offerData["orderid"];
+        const dfchtlc = offerData["dfchtlc"];
+        delete objOrderHtlcExpire[orderId][dfchtlc];
+        Deno.writeTextFileSync("./orderhtlcexpire.json", JSON.stringify(objOrderHtlcExpire));
+
         // Erase the offer spv htlc, so don't check again.
         delete objOfferSpvHtlc[offerId];
         Deno.writeTextFileSync("./offerspvhtlc.json", JSON.stringify(objOfferSpvHtlc));
@@ -347,6 +371,16 @@ async function loadExistingData() {
     } catch (e) {
         console.log("Skipped to load dbtcmakerstatistics.json");
     }
+
+    try {
+        const textOrderHtlcExpire = Deno.readTextFileSync("./orderhtlcexpire.json");
+        if (textOrderHtlcExpire.length > 0) {
+            objOrderHtlcExpire = JSON.parse(textOrderHtlcExpire);
+            console.log("objOrderHtlcExpire: " + JSON.stringify(objOrderHtlcExpire));
+        }
+    } catch (e) {
+        console.log("Skipped to load orderhtlcexpire.json");
+    }
 }
 
 async function outputStatistics() {
@@ -376,6 +410,27 @@ async function outputStatistics() {
     }
 
     sendAlarm(`[dbtc maker] Order size: ${objStatistics["dbtcInOrder"]}, BTC balance: ${btcBalance}, dBTC balance: ${dbtcBalance}, DFI Token balance: ${dfiTokenBalance}, DFI UTXO balance: ${dfiUtxoBalance}, Total dbtc amount in HTLC: ${dbtcInHtlc}`);
+}
+
+async function removeExpiredHtlc() {
+    var deletedItem = false;
+    for (var orderId in objOrderHtlcExpire) {
+        if (objOrderHtlcExpire.hasOwnProperty(orderId)) {
+            for (var dfchtlc in objOrderHtlcExpire[orderId]) {
+                if (objOrderHtlcExpire[orderId].hasOwnProperty(dfchtlc)) {
+                    if (objOrderHtlcExpire[orderId][dfchtlc] < headerBlock) {
+                        sendAlarm(`[dbtc maker] deleted expired dfthtlc ${dfchtlc} of order ${orderId} at block ${headerBlock}`);
+                        delete objOrderHtlcExpire[orderId][dfchtlc];
+                        deletedItem = true;
+                    }
+                }
+            }
+        }
+    }
+
+    if (deletedItem) {
+        Deno.writeTextFileSync("./orderhtlcexpire.json", JSON.stringify(objOrderHtlcExpire));
+    }
 }
 
 (async() => {
@@ -411,6 +466,8 @@ async function outputStatistics() {
             for (var offerId in objOfferSpvHtlc) {
                 await checkHtlcOutputAndClaim(offerId);
             }
+
+            await removeExpiredHtlc();
 
             await outputStatistics();
 
