@@ -61,6 +61,9 @@ export const waitConfirmation = async (txResult, waitUntil, hideSpinner) => {
     let unconfirmed = true;
     while(unconfirmed) {
         const txInfo = await rpcMethod('gettransaction', [txHash], true);
+        if (txInfo.result == null) {
+            continue;
+        }
         const confirmations = txInfo.result.confirmations;
         if(!hideSpinner) {
             await kia.set({ text: `Confirming tx id: ${txHash} Confirmations: ${confirmations}` });

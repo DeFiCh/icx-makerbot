@@ -45,7 +45,7 @@ async function canDeleteOrder(orderId) {
         return false;
     }
 
-    const listOrderOffers = (await rpcMethod('icx_listorders', [{ "orderTx": orderId }])).result;
+    const listOrderOffers = (await rpcMethod('icx_listorders', [{"orderTx": orderId}], true)).result;
 
     for (var offerKey in listOrderOffers) {
         if (offerKey == "WARNING")
@@ -57,7 +57,7 @@ async function canDeleteOrder(orderId) {
 }
 
 async function createOrderIfNotExist() {
-    const res = (await rpcMethod('getblockchaininfo'));
+    const res = (await rpcMethod('getblockchaininfo', [], true));
     if (res["result"] == null || res["result"]["headers"] == null) {
         sendAlarm("[dbtc maker] Failed to getblockchaininfo");
         return;
@@ -65,7 +65,7 @@ async function createOrderIfNotExist() {
 
     headerBlock = res["result"]["headers"];
 
-    const orders = (await rpcMethod('icx_listorders')).result;
+    const orders = (await rpcMethod('icx_listorders', [], true)).result;
     var foundOrder = false;
     var foundedOrder = "";
     const accountBalance = (await rpcMethod('getaccount', [ownerAddress])).result;
@@ -194,7 +194,7 @@ async function acceptOfferIfAny(orderId) {
         return;
     }
 
-    const listOrderOffers = (await rpcMethod('icx_listorders', [{"orderTx": orderId}])).result;
+    const listOrderOffers = (await rpcMethod('icx_listorders', [{"orderTx": orderId}], true)).result;
 
     for (var key in listOrderOffers) {
         if (key == "WARNING")

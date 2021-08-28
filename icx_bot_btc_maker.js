@@ -39,14 +39,14 @@ async function sendAlarm(msg) {
 }
 
 async function createOrderIfNotExist() {
-    const res = (await rpcMethod('getblockchaininfo'));
+    const res = (await rpcMethod('getblockchaininfo', [], true));
     if (res["result"] == null || res["result"]["headers"] == null) {
         sendAlarm("[btc maker] Failed to getblockchaininfo");
         return;
     }
     const headerBlock = res["result"]["headers"];
 
-    const orders = (await rpcMethod('icx_listorders')).result;
+    const orders = (await rpcMethod('icx_listorders', [], true)).result;
     var foundOrder = false;
     var foundedOrder = "";
     const btcBalance = parseFloat((await rpcMethod('spv_getbalance', [])).result);
@@ -73,7 +73,7 @@ async function createOrderIfNotExist() {
                         const timeDiffInHours = difference(time().now(), checkOrderSizeTime, { units: ["hours"] })["hours"];
                         if (timeDiffInHours > checkOrderSizeInterval) {
                             if (Math.abs(orderDetails["amountToFill"] - btcBalance) > 0.00001) {
-                                const listOrderOffers = (await rpcMethod('icx_listorders', [{ "orderTx": key }])).result;
+                                const listOrderOffers = (await rpcMethod('icx_listorders', [{ "orderTx": key }], true)).result;
 
                                 let hasOffer = false;
                                 for (var offerKey in listOrderOffers) {
@@ -168,7 +168,7 @@ async function acceptOfferIfAny(orderId) {
         return;
     }
 
-    const listOrderOffers = (await rpcMethod('icx_listorders', [{"orderTx": orderId}])).result;
+    const listOrderOffers = (await rpcMethod('icx_listorders', [{"orderTx": orderId}], true)).result;
 
     for (var key in listOrderOffers) {
         if (key == "WARNING")
