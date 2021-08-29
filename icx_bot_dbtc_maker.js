@@ -9,7 +9,7 @@ const btcReceiveAddress = Deno.env.get("SPV_BTC_ADDRESS");
 let btcReceiverPubkey = "";
 const alarmHook = Deno.env.get("ALARM_HOOK");
 
-let mapOfferData = new Map();
+let objOfferData = new Object();
 let objOfferSpvHtlc = new Object();
 let mapOfferSpvClaim = new Map();
 let objHashSeed = new Object();
@@ -22,8 +22,8 @@ let objStatistics = new Object();
 const outputStatisticsInterval = 6; // very 6 hours output statistics
 let outputStatisticsTime = new Date("2021-01-01"); // Set to an old time so when restart the script will output first.
 
-let objOrderHtlcExpire = new Object();
-let headerBlock = 0;
+let objOrderHtlcExpire = new Object(); // To help check if can close the order.
+let dfcHeaderBlock = 0;
 
 async function sendAlarm(msg) {
     console.log(msg);
@@ -41,7 +41,7 @@ async function sendAlarm(msg) {
 }
 
 async function canDeleteOrder(orderId) {
-    if (Object.keys(objOrderHtlcExpire).length > 0 && Object.keys(objOrderHtlcExpire[orderId]).length > 0) {
+    if (objOrderHtlcExpire[orderId] != null && Object.keys(objOrderHtlcExpire[orderId]).length > 0) {
         return false;
     }
 
@@ -63,7 +63,7 @@ async function createOrderIfNotExist() {
         return;
     }
 
-    headerBlock = res["result"]["headers"];
+    dfcHeaderBlock = res["result"]["headers"];
 
     const orders = (await rpcMethod('icx_listorders', [], true)).result;
     var foundOrder = false;
@@ -90,13 +90,13 @@ async function createOrderIfNotExist() {
                 orderDetails["tokenFrom"] == "BTC" &&
                 orderDetails["chainTo"] == "BTC")
             {
-                console.log(`Order ${key} expiration height ${orderDetails["expireHeight"]}, blockchain header block ${headerBlock}`);
+                console.log(`Order ${key} expiration height ${orderDetails["expireHeight"]}, blockchain header block ${dfcHeaderBlock}`);
                 if (foundOrder) {
                     sendAlarm(`[dbtc maker] Already have order ${foundedOrder}, close extra order ${key}`);
                     const closeTxid = await waitConfirmation(await rpcMethod('icx_closeorder', [key]), 0, true);
                     sendAlarm(`[dbtc maker] Order ${key} is closed in tx ${JSON.stringify(closeTxid)}`);
                 } else {
-                    if (orderDetails["expireHeight"] > headerBlock + minOrderLife) {
+                    if (orderDetails["expireHeight"] > dfcHeaderBlock + minOrderLife) {
                         const timeDiffInHours = difference(time().now(), checkOrderSizeTime, { units: ["hours"] })["hours"];
                         if (timeDiffInHours > checkOrderSizeInterval) {
                             if (Math.abs(orderDetails["amountToFill"] - btcBalance) > 0.00001) {
@@ -111,6 +111,7 @@ async function createOrderIfNotExist() {
                             }
                         }
                         console.log("Found order " + key);
+                        objStatistics["dbtcInOrder"] = orderDetails["amountFrom"];
                         foundOrder = true;
                         foundedOrder = key;
                     } else {
@@ -162,8 +163,8 @@ async function createOrderIfNotExist() {
 
 async function checkExistingDfcHtlc(offerId) {
     console.log("checkExistingDfcHtlc for offerId: " + offerId);
-    if (mapOfferData.has(offerId)) {
-        console.log("Offer " + offerId + " already has dfc htlc " + mapOfferData.get(offerId)["dfchtlc"])
+    if (objOfferData.hasOwnProperty(offerId)) {
+        console.log("Offer " + offerId + " already has dfc htlc " + objOfferData[offerId]["dfchtlc"])
         return;
     }
 
@@ -182,8 +183,16 @@ async function checkExistingDfcHtlc(offerId) {
             const seed = objHashSeed[hash];
             console.log("Seed: " + seed);
 
-            let offerData = {"seed": seed, "hash": hash, "dfchtlc": key, "timeout": htlcDetails["timeout"], "amount": htlcDetails["amount"] };
-            mapOfferData.set(offerId, offerData);
+            let offerData = {
+                "seed": seed,
+                "hash": hash,
+                "dfchtlc": key,
+                "timeout": htlcDetails["timeout"],
+                "amount": htlcDetails["amount"],
+                "expire": dfcHeaderBlock + htlcDetails["timeout"]
+            };
+            objOfferData[offerId] = offerData;
+            Deno.writeTextFileSync("./DBtcOfferData.json", JSON.stringify(objOfferData));
         }
     }
 }
@@ -207,7 +216,7 @@ async function acceptOfferIfAny(orderId) {
         if (key == "WARNING")
             continue;
 
-        if (mapOfferData.has(key)) {
+        if (objOfferData.hasOwnProperty(key)) {
             console.log("Order " + orderId + " already has offer " + key);
             continue;
         }
@@ -236,10 +245,18 @@ async function acceptOfferIfAny(orderId) {
             objStatistics["dbtcInHtlc"] += offerDetails["amount"];
             Deno.writeTextFileSync("./dbtcmakerstatistics.json", JSON.stringify(objStatistics));
 
-            let offerData = {"seed": seed, "hash": hash, "dfchtlc": dfcHtlcTxid, "timeout": TIMEOUT, "amount": offerDetails["amount"], "orderid" : orderId };
-            mapOfferData.set(key, offerData);
+            let offerData = {
+                "seed": seed, "hash": hash,
+                "dfchtlc": dfcHtlcTxid,
+                "timeout": TIMEOUT,
+                "amount": offerDetails["amount"],
+                "orderid": orderId,
+                "expire": dfcHeaderBlock + TIMEOUT
+            };
+            objOfferData[key] = offerData;
+            Deno.writeTextFileSync("./DBtcOfferData.json", JSON.stringify(objOfferData));
 
-            objOrderHtlcExpire[orderId][dfcHtlcTxid] = headerBlock + TIMEOUT;
+            objOrderHtlcExpire[orderId][dfcHtlcTxid] = dfcHeaderBlock + TIMEOUT;
             Deno.writeTextFileSync("./orderhtlcexpire.json", JSON.stringify(objOrderHtlcExpire));
 
             sendAlarm(`[dbtc maker] accepted offer ${key} by call icx_submitdfchtlc with txid: ${dfcHtlcTxid}, amount: ${offerDetails["amount"]}`);
@@ -247,7 +264,7 @@ async function acceptOfferIfAny(orderId) {
     }
 }
 
-async function checkOfferSpvHtlc(offerData, offerId) {
+async function checkOfferSpvHtlc(offerId) {
     console.log("Checking spv htlc of offer " + offerId);
 
     if (mapOfferSpvClaim.has(offerId)) {
@@ -301,14 +318,14 @@ async function checkHtlcOutputAndClaim(offerId) {
     console.log("spv_listreceivedbyaddress result " + JSON.stringify(listSpvReceived));
     console.log("listSpvReceived.length: " + Object.keys(listSpvReceived).length);
     if (Object.keys(listSpvReceived).length > 0) {
-        if (!mapOfferData.has(offerId)) {
+        if (!objOfferData.hasOwnProperty(offerId)) {
             const msg = `[dbtc maker] offer ${offerId} don't have htlc data`;
             sendAlarm(msg);
             console.error(msg);
             return;
         }
 
-        const offerData = mapOfferData.get(offerId);
+        const offerData = objOfferData[offerId];
         if (listSpvReceived[0]["amount"] != offerData["amount"]) {
             sendAlarm(`[dbtc maker] The spv received amount ${listSpvReceived[0]["amount"]} not match with offer amount ${offerData["amount"]}!`);
         }
@@ -327,6 +344,9 @@ async function checkHtlcOutputAndClaim(offerId) {
         sendAlarm(`[dbtc maker] SPV claim txid: ${claimBtcTxid.result["txid"]}`);
 
         mapOfferSpvClaim.set(offerId, claimBtcTxid.result["txid"]);
+
+        delete objOfferData[offerId];
+        Deno.writeTextFileSync("./DBtcOfferData.json", JSON.stringify(objOfferData));
 
         sendAlarm(`[dbtc maker] Finished the whole swap process for offer: ${offerId}`);
 
@@ -381,6 +401,16 @@ async function loadExistingData() {
     } catch (e) {
         console.log("Skipped to load orderhtlcexpire.json");
     }
+
+    try {
+        const textDBtcOfferData = Deno.readTextFileSync("./DBtcOfferData.json");
+        if (textBtcOfferData.length > 0) {
+            objOfferData = JSON.parse(textDBtcOfferData);
+            console.log("objOfferData: " + JSON.stringify(objOfferData));
+        }
+    }catch(e) {
+        console.log("Skipped to load DBtcOfferData.json");
+    }
 }
 
 async function outputStatistics() {
@@ -418,8 +448,8 @@ async function removeExpiredHtlc() {
         if (objOrderHtlcExpire.hasOwnProperty(orderId)) {
             for (var dfchtlc in objOrderHtlcExpire[orderId]) {
                 if (objOrderHtlcExpire[orderId].hasOwnProperty(dfchtlc)) {
-                    if (objOrderHtlcExpire[orderId][dfchtlc] < headerBlock) {
-                        sendAlarm(`[dbtc maker] deleted expired dfthtlc ${dfchtlc} of order ${orderId} at block ${headerBlock}`);
+                    if (objOrderHtlcExpire[orderId][dfchtlc] < dfcHeaderBlock) {
+                        sendAlarm(`[dbtc maker] deleted expired dfthtlc ${dfchtlc} of order ${orderId} at block ${dfcHeaderBlock}`);
                         delete objOrderHtlcExpire[orderId][dfchtlc];
                         deletedItem = true;
                     }
@@ -430,6 +460,15 @@ async function removeExpiredHtlc() {
 
     if (deletedItem) {
         Deno.writeTextFileSync("./orderhtlcexpire.json", JSON.stringify(objOrderHtlcExpire));
+    }
+
+    for (var offerId in objOfferData) {
+        if (objOfferData.hasOwnProperty(offerId)) {
+            if (objOfferData[offerId]["expire"] < dfcHeaderBlock) {
+                delete objOfferData[offerId];
+                Deno.writeTextFileSync("./DBtcOfferData.json", JSON.stringify(objOfferData));
+            }
+        }
     }
 }
 
@@ -460,8 +499,12 @@ async function removeExpiredHtlc() {
             const orderTxId = await createOrderIfNotExist(btcReceiverPubkey);
 
             await acceptOfferIfAny(orderTxId);
-            
-            await mapOfferData.forEach(checkOfferSpvHtlc);
+
+            for (var offerId in objOfferData) {
+                if (objOfferData.hasOwnProperty(offerId)) {
+                    checkOfferSpvHtlc(offerId);
+                }
+            }
 
             for (var offerId in objOfferSpvHtlc) {
                 await checkHtlcOutputAndClaim(offerId);

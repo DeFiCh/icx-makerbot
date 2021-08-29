@@ -9,7 +9,7 @@ const btcMakerAddress = Deno.env.get("SPV_BTC_ADDRESS");
 let btcMakerPubkey = "";
 const alarmHook = Deno.env.get("ALARM_HOOK");
 
-let mapOfferData = new Map();
+let objOfferData = new Object();
 let mapOfferDfcClaim = new Map();
 let objHashSeed = new Object();
 let objSpvHtlcExpire = new Object();
@@ -22,6 +22,8 @@ let checkOrderSizeTime = new Date("2021-01-01"); // Set to an old time so when r
 
 const outputStatisticsInterval = 6; // very 6 hours output statistics
 let outputStatisticsTime = new Date("2021-01-01"); // Set to an old time so when restart the script will output first.
+
+let btcBlock = 0;
 
 async function sendAlarm(msg) {
     console.log(msg);
@@ -91,6 +93,7 @@ async function createOrderIfNotExist() {
                             }
                         }
                         console.log("Found order " + key);
+                        objStatistics["btcInOrder"] = orderDetails["amountFrom"];
                         foundOrder = true;
                         foundedOrder = key;
                     } else {
@@ -136,8 +139,8 @@ async function createOrderIfNotExist() {
 
 async function checkExistingExtHtlc(offerId) {
     console.log("checkExistingExtHtlc for offerId: " + offerId);
-    if (mapOfferData.has(offerId)) {
-        console.log("Offer " + offerId + " already has ext htlc " + mapOfferData.get(offerId)["exthtlc"])
+    if (objOfferData.hasOwnProperty(offerId)) {
+        console.log("Offer " + offerId + " already has ext htlc " + objOfferData[offerId]["exthtlc"])
         return;
     }
 
@@ -156,8 +159,17 @@ async function checkExistingExtHtlc(offerId) {
             const seed = objHashSeed[hash];
             console.log("Seed: " + seed);
 
-            let offerData = {"seed": seed, "hash": hash, "exthtlc": key, "timeout": htlcDetails["timeout"], "amount": htlcDetails["amount"] };
-            mapOfferData.set(offerId, offerData);
+            let offerData = {
+                "seed": seed,
+                "hash": hash,
+                "exthtlc": key,
+                "timeout": htlcDetails["timeout"],
+                "amount": htlcDetails["amount"],
+                "expire": btcBlock + htlcDetails["timeout"]
+            };
+            objOfferData[offerId] = offerData;
+
+            Deno.writeTextFileSync("./BtcOfferData.json", JSON.stringify(objOfferData));
         }
     }
 }
@@ -182,7 +194,7 @@ async function acceptOfferIfAny(orderId) {
         if (key == "WARNING")
             continue;
 
-        if (mapOfferData.has(key)) {
+        if (objOfferData.hasOwnProperty(key)) {
             console.log("Order " + orderId + " already has offer " + key);
             continue;
         }
@@ -192,23 +204,10 @@ async function acceptOfferIfAny(orderId) {
         console.log(`Offer detail: ${JSON.stringify(offerDetails)}`);
         if (offerDetails["status"] == "OPEN") {
             sendAlarm(`[btc maker] received offer ${key} with amount ${offerDetails["amount"]}`);
-            const res = (await rpcMethod('spv_syncstatus'));
-            if (res["result"] == null || !res["result"]["connected"]) {
-                console.warn("spv not connected");
-                sendAlarm("[btc maker] spv not connected");
-                continue;
-            }
-
-            if (res["result"]["current"] != res["result"]["estimated"]) {
-                console.warn("spv not full synced");
-                sendAlarm("[btc maker] spv not full synced");
-                continue;
-            }
-
-            const btcBlock = res["result"]["current"];
 
             const btcTakerPubkey = offerDetails["receivePubkey"];
             const SPV_TIMEOUT = 80;  // Must greater than CICXSubmitEXTHTLC::EUNOSPAYA_MINIMUM_TIMEOUT = 72;
+
             // Create the on maker side. Note. the timeout input is a string but not a number
             // If input number, will have "JSON value is not a string as expected" error.
             const spvHtlc = await waitSPVConnected(async () => {
@@ -267,13 +266,21 @@ async function acceptOfferIfAny(orderId) {
                 continue;
             }
             sendAlarm(`[btc maker] icx_submitexthtlc txid: ${extHtlcTxid}`);
-            let offerData = {"seed": seed, "hash": hash, "exthtlc": extHtlcTxid, "timeout": SPV_TIMEOUT, "amount": offerDetails["amountInFromAsset"] };
-            mapOfferData.set(key, offerData);
+            let offerData = {
+                "seed": seed,
+                "hash": hash,
+                "exthtlc": extHtlcTxid,
+                "timeout": SPV_TIMEOUT,
+                "amount": offerDetails["amountInFromAsset"],
+                "expire": btcBlock + SPV_TIMEOUT
+            };
+            objOfferData[key] = offerData;
+            Deno.writeTextFileSync("./BtcOfferData.json", JSON.stringify(objOfferData));
         }
     }
 }
 
-async function checkOfferDfcHtlc(offerData, offerId) {
+async function checkOfferDfcHtlc(offerId) {
     console.log("Checking dfc htlc of offer " + offerId);
 
     if (mapOfferDfcClaim.has(offerId)) {
@@ -289,7 +296,7 @@ async function checkOfferDfcHtlc(offerData, offerId) {
 
         const htlcDetails = listHtlcs[key];
         if (htlcDetails["type"] == "DFC" && htlcDetails["status"] == "OPEN" && offerId == htlcDetails["offerTx"]) {
-            const offerData = mapOfferData.get(offerId);
+            const offerData = objOfferData[offerId];
 
             const dfcClaimRes = await rpcMethod('icx_claimdfchtlc', [{"dfchtlcTx": key, "seed": offerData["seed"]}]);
             if (dfcClaimRes["error"] != null) {
@@ -300,6 +307,9 @@ async function checkOfferDfcHtlc(offerData, offerId) {
             sendAlarm("[btc maker] Claimed dBTC in txid: " + JSON.stringify(dfcClaimTxid));
             mapOfferDfcClaim.set(offerId, dfcClaimTxid.txid);
             sendAlarm(`[btc maker] Finished the whole swap process for offer: ${offerId}`);
+
+            delete objOfferData[offerId];
+            Deno.writeTextFileSync("./BtcOfferData.json", JSON.stringify(objOfferData));
         }
     }
 }
@@ -344,9 +354,19 @@ async function loadExistingData() {
     } catch (e) {
         console.log("Skipped to load btcmakerstatistics.json");
     }
+
+    try {
+        const textBtcOfferData = Deno.readTextFileSync("./BtcOfferData.json");
+        if (textBtcOfferData.length > 0) {
+            objOfferData = JSON.parse(textBtcOfferData);
+            console.log("objOfferData: " + JSON.stringify(objOfferData));
+        }
+    }catch(e) {
+        console.log("Skipped to load BtcOfferData.json");
+    }
 }
 
-async function claimExpiredSpvHtlc() {
+async function getBtcBlock() {
     const res = (await rpcMethod('spv_syncstatus'));
     if (res["result"] == null || !res["result"]["connected"]) {
         console.warn("spv not connected");
@@ -359,8 +379,11 @@ async function claimExpiredSpvHtlc() {
         sendAlarm("[btc maker] spv not full synced");
         return;
     }
-    const btcBlock = res["result"]["current"];
 
+    btcBlock = res["result"]["current"];
+}
+
+async function claimExpiredSpvHtlc() {
     let spvHtlcToRemove = Array();
     for (const spvHtlc in objSpvHtlcExpire) {
         const expireBlock = objSpvHtlcExpire[spvHtlc];
@@ -393,6 +416,15 @@ async function claimExpiredSpvHtlc() {
         }else {
             console.log(`Remove file spvhtlcexpire.json`);
             Deno.removeSync("./spvhtlcexpire.json");
+        }
+    }
+
+    for (var offerId in objOfferData) {
+        if (objOfferData.hasOwnProperty(offerId)) {
+            if (objOfferData[offerId]["expire"] < btcBlock) {
+                delete objOfferData[offerId];
+                Deno.writeTextFileSync("./BtcOfferData.json", JSON.stringify(objOfferData));
+            }
         }
     }
 }
@@ -452,9 +484,15 @@ async function outputStatistics() {
         while(true) {
             const orderTxId = await createOrderIfNotExist(btcMakerPubkey);
 
+            await getBtcBlock();
+
             await acceptOfferIfAny(orderTxId);
-            
-            await mapOfferData.forEach(checkOfferDfcHtlc);
+
+            for (var offerId in objOfferData) {
+                if (objOfferData.hasOwnProperty(offerId)) {
+                    checkOfferDfcHtlc(offerId);
+                }
+            }
 
             await claimExpiredSpvHtlc();
 
