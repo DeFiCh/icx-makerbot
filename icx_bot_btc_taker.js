@@ -48,7 +48,7 @@ const offerAmount = 0.0001;
 
         console.log("Start to make offer");
         const offerTxId = await waitConfirmation(await rpcMethod('icx_makeoffer',
-            [{"orderTx": orderId, "amount": offerAmount, "ownerAddress": ownerAddress, "receivePubkey": btcPubkey, "expiry":200}]));
+            [{"orderTx": orderId, "amount": offerAmount, "ownerAddress": ownerAddress, "receivePubkey": btcPubkey, "expiry": 200}]));
         console.log("made offer " + offerTxId + " to order " + orderId);
 
         let foundHtlc = false;
