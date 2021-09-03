@@ -297,7 +297,6 @@ async function checkOfferSpvHtlc(offerId) {
             }
 
             objOfferSpvHtlc[offerId] = spvHtlc.result["address"];
-
             Deno.writeTextFileSync("./offerspvhtlc.json", JSON.stringify(objOfferSpvHtlc));
 
             sendAlarm("[dbtc maker] spv_createhtlc address result: " + objOfferSpvHtlc[offerId]);
@@ -319,9 +318,13 @@ async function checkHtlcOutputAndClaim(offerId) {
     console.log("listSpvReceived.length: " + Object.keys(listSpvReceived).length);
     if (Object.keys(listSpvReceived).length > 0) {
         if (!objOfferData.hasOwnProperty(offerId)) {
-            const msg = `[dbtc maker] offer ${offerId} don't have htlc data`;
+            const msg = `[dbtc maker] offer ${offerId} don't have htlc data for spv htlc ${spvHtlc}`;
             sendAlarm(msg);
             console.error(msg);
+
+            // Delete it so it will goes into infinite loop.
+            delete objOfferSpvHtlc[offerId];
+            Deno.writeTextFileSync("./offerspvhtlc.json", JSON.stringify(objOfferSpvHtlc));
             return;
         }
 
@@ -507,7 +510,10 @@ async function removeExpiredHtlc() {
             }
 
             for (var offerId in objOfferSpvHtlc) {
-                await checkHtlcOutputAndClaim(offerId);
+                // Need to check here because objOfferSpvHtlc maybe deleted some offers inside checkHtlcOutputAndClaim
+                if (objOfferSpvHtlc.hasOwnProperty(offerId)) {
+                    await checkHtlcOutputAndClaim(offerId);
+                }
             }
 
             await removeExpiredHtlc();
