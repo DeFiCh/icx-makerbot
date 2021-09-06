@@ -85,7 +85,7 @@ async function createOrderIfNotExist() {
                                 }
                                 // If the order size not match with balance and it don't have offer now, then close the order and recreate a new order.
                                 if (!hasOffer) {
-                                    sendAlarm(`[btc maker] Order ${key} size ${orderDetails["amountToFill"]} not match with the btc balance, close it and recreate new one`);
+                                    sendAlarm(`[btc maker] Order ${key} size ${orderDetails["amountToFill"]} not match with the btc balance ${btcBalance}, close it and recreate new one`);
                                     const closeTxid = await waitConfirmation(await rpcMethod('icx_closeorder', [key]), 0, true);
                                     sendAlarm(`[btc maker] Order ${key} is closed in tx ${JSON.stringify(closeTxid)}`);
                                     continue;
