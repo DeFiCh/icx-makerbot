@@ -458,7 +458,7 @@ async function outputStatistics() {
     sendAlarm(`[btc maker] Order size: ${objStatistics["btcInOrder"]}, BTC balance: ${btcBalance}, dBTC balance: ${dbtcBalance}, DFI Token balance: ${dfiTokenBalance}, DFI UTXO balance: ${dfiUtxoBalance}, Total btc amount in HTLC: ${btcInHtlc}`);
 }
 
-(async() => {
+export default async () => {
     try{
         if (ownerAddress == null) {
             console.error("Please define DFI_ADDRESS in environment variable");
@@ -503,4 +503,4 @@ async function outputStatistics() {
     }catch(e) {
         console.error(e);
     }
-})();
+}

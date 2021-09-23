@@ -2,3 +2,4 @@ test.js
 *.log
 *.json
 *.out
+.env
