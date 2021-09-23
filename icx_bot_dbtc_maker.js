@@ -475,7 +475,7 @@ async function removeExpiredHtlc() {
     }
 }
 
-(async() => {
+export default async () => {
     try{
         if (ownerAddress == null) {
             console.error("Please define DFI_ADDRESS in environment variable");
@@ -525,4 +525,4 @@ async function removeExpiredHtlc() {
     }catch(e) {
         console.error(e);
     }
-})();
+}
